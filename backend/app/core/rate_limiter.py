@@ -62,8 +62,12 @@ def rate_limit(max_requests: int = 5, window_seconds: int = 60) -> Callable:
             await redis.zadd(key, {str(now): now})
             await redis.expire(key, window_seconds)
 
-        except RuntimeError:
-            # Redis unavailable — allow the request through
+        except HTTPException:
+            # Re-raise 429 — don't swallow it
+            raise
+        except Exception:
+            # Redis unavailable (RuntimeError, TimeoutError, ConnectionError, etc.)
+            # — allow the request through silently
             pass
 
     return _dependency

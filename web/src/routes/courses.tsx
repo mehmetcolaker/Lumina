@@ -1,31 +1,44 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { COURSES } from "@/lib/courses";
 import { Reveal } from "@/components/site/Reveal";
-import { Search, Clock, Zap, BookOpen, ArrowRight } from "lucide-react";
+import { api } from "@/lib/api";
+import type { CourseResponse } from "@/lib/api-types";
+import { slugify } from "@/lib/courses";
+import { Search, BookOpen, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/courses")({
   component: CoursesPage,
   head: () => ({
     meta: [
       { title: "Courses — Lumina" },
-      { name: "description", content: "Browse Lumina's full catalog of interactive coding courses." },
+      {
+        name: "description",
+        content: "Browse Lumina's full catalog of interactive coding courses.",
+      },
       { property: "og:title", content: "Courses — Lumina" },
     ],
   }),
 });
 
-const CATS = ["All", "Web Dev", "Data", "AI", "Backend", "Mobile", "Security", "Design", "Python", "JavaScript"];
-
 function CoursesPage() {
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState("All");
+  const [language, setLanguage] = useState<string>("All");
   const [scrollY, setScrollY] = useState(0);
+
+  const {
+    data: courses,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<CourseResponse[]>({
+    queryKey: ["courses"],
+    queryFn: () => api.get<CourseResponse[]>("/courses/"),
+  });
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -33,17 +46,26 @@ function CoursesPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const languages = useMemo(() => {
+    const set = new Set<string>(["All"]);
+    courses?.forEach((c) => set.add(c.language));
+    return Array.from(set);
+  }, [courses]);
+
   const filtered = useMemo(() => {
-    return COURSES.filter((c) => {
-      const m1 = cat === "All" || c.tag === cat;
-      const m2 = !q || c.title.toLowerCase().includes(q.toLowerCase()) || c.desc.toLowerCase().includes(q.toLowerCase());
+    if (!courses) return [];
+    return courses.filter((c) => {
+      const m1 = language === "All" || c.language === language;
+      const m2 =
+        !q ||
+        c.title.toLowerCase().includes(q.toLowerCase()) ||
+        (c.description ?? "").toLowerCase().includes(q.toLowerCase());
       return m1 && m2;
     });
-  }, [q, cat]);
+  }, [courses, q, language]);
 
   return (
     <Layout>
-      {/* Parallax hero */}
       <section className="relative overflow-hidden border-b border-border bg-[image:var(--gradient-hero)]">
         <div
           className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/30 blur-3xl animate-blob"
@@ -56,12 +78,15 @@ function CoursesPage() {
         <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
           <Reveal>
             <Badge variant="secondary" className="mb-4 animate-fade-in">
-              <BookOpen className="mr-1 h-3 w-3" /> {COURSES.length} courses
+              <BookOpen className="mr-1 h-3 w-3" /> {courses?.length ?? 0} courses
             </Badge>
           </Reveal>
           <Reveal delay={100}>
             <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
-              Find your <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">next skill</span>
+              Find your{" "}
+              <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">
+                next skill
+              </span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
@@ -85,51 +110,65 @@ function CoursesPage() {
 
       <section className="mx-auto max-w-7xl px-6 py-16">
         <div className="mb-8 flex flex-wrap gap-2">
-          {CATS.map((c) => (
+          {languages.map((lang) => (
             <button
-              key={c}
-              onClick={() => setCat(c)}
+              key={lang}
+              onClick={() => setLanguage(lang)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5 ${
-                cat === c
+                language === lang
                   ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-soft)]"
                   : "bg-secondary text-secondary-foreground hover:bg-accent"
               }`}
             >
-              {c}
+              {lang}
             </button>
           ))}
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((c, i) => (
-            <Reveal key={c.slug} delay={i * 60}>
-              <Link to="/courses/$slug" params={{ slug: c.slug }}>
-                <Card className="group h-full overflow-hidden p-6 hover-lift cursor-pointer border-border/60">
-                  <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-[image:var(--gradient-hero)] transition-transform duration-500 group-hover:scale-105">
-                    <span className="text-4xl font-bold text-primary/40 transition-transform group-hover:scale-125">
-                      {c.tag.slice(0, 2).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline">{c.level}</Badge>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {c.hours}h</span>
-                    <span className="flex items-center gap-1 text-primary"><Zap className="h-3 w-3" /> {c.xp} XP</span>
-                  </div>
-                  <h3 className="mt-3 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
-                    {c.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.desc}</p>
-                  <div className="mt-4 flex items-center text-sm font-medium text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
-                    Start course <ArrowRight className="ml-1 h-4 w-4" />
-                  </div>
-                </Card>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
+        {isLoading && (
+          <div className="py-20 text-center text-muted-foreground">Loading courses…</div>
+        )}
 
-        {filtered.length === 0 && (
-          <div className="py-20 text-center text-muted-foreground animate-fade-in">No courses match your filters.</div>
+        {isError && (
+          <div className="py-20 text-center text-destructive">
+            Failed to load courses: {(error as Error)?.message ?? "Unknown error"}
+          </div>
+        )}
+
+        {!isLoading && !isError && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((c, i) => (
+              <Reveal key={c.id} delay={i * 60}>
+                <Link to="/courses/$slug" params={{ slug: slugify(c.title) }}>
+                  <Card className="group h-full overflow-hidden p-6 hover-lift cursor-pointer border-border/60">
+                    <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-[image:var(--gradient-hero)] transition-transform duration-500 group-hover:scale-105">
+                      <span className="text-4xl font-bold text-primary/40 transition-transform group-hover:scale-125">
+                        {c.language.slice(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline">{c.language}</Badge>
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+                      {c.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                      {c.description ?? "Interactive coding course."}
+                    </p>
+                    <div className="mt-4 flex items-center text-sm font-medium text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
+                      Start course <ArrowRight className="ml-1 h-4 w-4" />
+                    </div>
+                  </Card>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && !isError && filtered.length === 0 && (
+          <div className="py-20 text-center text-muted-foreground animate-fade-in">
+            No courses match your filters.
+          </div>
         )}
       </section>
     </Layout>
