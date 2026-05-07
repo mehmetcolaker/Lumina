@@ -1,1 +1,35 @@
+# Environment
 .env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+pgdata/
+
+# Alembic (generated migrations stay, but not the version dir placeholder)
+alembic/versions/.gitkeep
+
+# Logs
+*.log
