@@ -2,9 +2,8 @@ import enum
 import uuid
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Enum as SAEnum, JSON, Uuid
 from sqlalchemy import ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -41,7 +40,7 @@ class Course(Base):
     __tablename__ = "courses"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -75,12 +74,12 @@ class Section(Base):
     __tablename__ = "sections"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         primary_key=True,
         default=uuid.uuid4,
     )
     course_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("courses.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -121,12 +120,12 @@ class Step(Base):
     __tablename__ = "steps"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         primary_key=True,
         default=uuid.uuid4,
     )
     section_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("sections.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -135,7 +134,7 @@ class Step(Base):
         SAEnum(StepType, name="step_type_enum", create_constraint=True),
         nullable=False,
     )
-    content_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    content_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     xp_reward: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
 

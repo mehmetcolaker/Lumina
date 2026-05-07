@@ -1,11 +1,12 @@
 """Gamification business logic.
 
 Handles XP awards (Postgres + Redis leaderboard sync), leaderboard
-queries against Redis sorted sets, and line-comment CRUD.
+queries against Redis sorted sets, line-comment CRUD, and streak
+management.
 """
 
 import logging
-from datetime import date, timezone
+from datetime import date, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import select
@@ -29,6 +30,12 @@ async def award_xp(db: AsyncSession, user_id: UUID, xp_amount: int) -> int:
     Creates a ``UserStats`` row on first call for the user.  Afterwards
     it performs an atomic increment on both Postgres and Redis.
 
+    Also updates the user's streak based on ``last_active_date``:
+
+        - If the last active date is **yesterday** → streak is incremented.
+        - If the last active date is **today** → streak is left unchanged.
+        - If the last active date is older (or never set) → streak is reset to 1.
+
     Args:
         db: An async database session.
         user_id: The UUID of the user receiving XP.
@@ -45,21 +52,36 @@ async def award_xp(db: AsyncSession, user_id: UUID, xp_amount: int) -> int:
 
     stats = await _get_or_create_stats(db, user_id)
 
+    # --- Streak logic ---
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+
+    if stats.last_active_date == yesterday:
+        stats.current_streak += 1
+    elif stats.last_active_date == today:
+        pass  # same day, no change
+    else:
+        stats.current_streak = 1  # gap → reset
+
     stats.total_xp += xp_amount
-    stats.last_active_date = date.today()
+    stats.last_active_date = today
 
     db.add(stats)
     await db.flush()
 
     # Sync to Redis leaderboard (sorted set)
-    redis = get_redis()
-    await redis.zadd(LEADERBOARD_KEY, {str(user_id): stats.total_xp})
+    try:
+        redis = get_redis()
+        await redis.zadd(LEADERBOARD_KEY, {str(user_id): stats.total_xp})
+    except Exception:
+        logger.warning("Failed to sync XP to Redis for user %s", user_id)
 
     logger.info(
-        "Awarded %d XP to user %s (total now %d)",
+        "Awarded %d XP to user %s (total now %d, streak %d)",
         xp_amount,
         user_id,
         stats.total_xp,
+        stats.current_streak,
     )
 
     return stats.total_xp

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.rate_limiter import rate_limit
 from app.core.security import create_access_token
 from app.modules.users import services
 from app.modules.users.schemas import Token, TokenPayload, UserCreate, UserResponse
@@ -58,7 +59,11 @@ async def get_current_user(
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
 )
-async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> UserResponse:
+async def register(
+    payload: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    _rate_limit: None = Depends(rate_limit(max_requests=5, window_seconds=60)),
+) -> UserResponse:
     """Create a new user account.
 
     The email must be unique. Returns the created user profile.
@@ -81,6 +86,7 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> U
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
+    _rate_limit: None = Depends(rate_limit(max_requests=5, window_seconds=60)),
 ) -> Token:
     """Authenticate with email and password, receiving a JWT access token.
 

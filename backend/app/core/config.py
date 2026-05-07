@@ -8,8 +8,13 @@ class Settings(BaseSettings):
         DATABASE_URL: PostgreSQL connection string for async SQLAlchemy.
         SECRET_KEY: Secret key used for JWT signing.
         ALGORITHM: JWT signing algorithm (default: HS256).
-        ACCESS_TOKEN_EXPIRE_MINUTES: Token expiration time in minutes (default: 30).
+        ACCESS_TOKEN_EXPIRE_MINUTES: Token expiration time in minutes.
         REDIS_URL: Redis connection string for Celery broker/backend.
+        STRIPE_SECRET_KEY: Stripe API secret key.
+        STRIPE_WEBHOOK_SECRET: Stripe webhook signing secret.
+        STRIPE_PRICE_ID: Stripe Price ID for the premium plan.
+        STRIPE_SUCCESS_URL: Redirect URL after successful checkout.
+        STRIPE_CANCEL_URL: Redirect URL after cancelled checkout.
     """
 
     DATABASE_URL: str
@@ -17,6 +22,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    # Stripe
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_ID: str = ""
+    STRIPE_SUCCESS_URL: str = "https://lumina.app/dashboard"
+    STRIPE_CANCEL_URL: str = "https://lumina.app/pricing"
 
     # --- Sync database URL for Celery workers (psycopg2 driver) ---
     @property

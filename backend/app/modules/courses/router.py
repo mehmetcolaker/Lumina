@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,8 +44,17 @@ async def get_course_path(
         course_id: The UUID of the course to fetch.
 
     Raises:
+        422: If ``course_id`` is not a valid UUID.
         404: If no course with the given ID exists.
     """
+    try:
+        UUID(course_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid course_id format.",
+        )
+
     course = await services.get_course_with_path(db, course_id)
     if not course:
         raise HTTPException(
