@@ -1,9 +1,17 @@
+# ──────────────────────────────────────────────
 # Environment
+# ──────────────────────────────────────────────
 .env
+.env.local
+.env.production
+.env.development
 .venv/
 venv/
+virtualenv/
 
+# ──────────────────────────────────────────────
 # Python
+# ──────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -14,22 +22,67 @@ build/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.so
+*.pyd
 
-# IDE
+# ──────────────────────────────────────────────
+# IDE & Editors
+# ──────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+*.sublime-workspace
+*.sublime-project
 
+# ──────────────────────────────────────────────
 # OS
+# ──────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
+# ──────────────────────────────────────────────
 # Docker
+# ──────────────────────────────────────────────
 pgdata/
+redis-data/
 
-# Alembic (generated migrations stay, but not the version dir placeholder)
-alembic/versions/.gitkeep
+# ──────────────────────────────────────────────
+# Celery / Redis
+# ──────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
 
-# Logs
+# ──────────────────────────────────────────────
+# Logs & Databases
+# ──────────────────────────────────────────────
 *.log
+*.sqlite
+*.sqlite3
+*.db
+
+# ──────────────────────────────────────────────
+# Backend specific
+# ──────────────────────────────────────────────
+backend/.pytest_cache/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/core/__pycache__/
+backend/app/modules/__pycache__/
+backend/app/modules/*/__pycache__/
+backend/alembic/versions/.gitkeep
+
+# ──────────────────────────────────────────────
+# Project
+# ──────────────────────────────────────────────
+*.egg-info/
+.coverage
+htmlcov/
+.pytest_cache/

@@ -1,10 +1,5 @@
-"""Tests for the Execution (Sandbox) module.
+"""Tests for the Execution (Sandbox) module."""
 
-Note: These tests verify the HTTP submission/status logic. The actual
-Docker sandbox and Celery worker are not exercised in unit tests.
-"""
-
-import pytest
 from httpx import AsyncClient
 
 
@@ -12,10 +7,12 @@ class TestSubmitCode:
     ENDPOINT = "/api/v1/execution/submit"
 
     async def test_submit_success(
-        self, async_client: AsyncClient, seeded_course, auth_headers
+        self, async_client: AsyncClient, seeded_course_data, auth_headers
     ):
-        step_id = seeded_course.sections[0].steps[0].id
-        payload = {"step_id": str(step_id), "code": "print('hello')"}
+        payload = {
+            "step_id": seeded_course_data["step_id_1"],
+            "code": "print('hello')",
+        }
         resp = await async_client.post(
             self.ENDPOINT, json=payload, headers=auth_headers
         )
@@ -25,18 +22,22 @@ class TestSubmitCode:
         assert "submission_id" in data
 
     async def test_submit_requires_auth(
-        self, async_client: AsyncClient, seeded_course
+        self, async_client: AsyncClient, seeded_course_data
     ):
-        step_id = seeded_course.sections[0].steps[0].id
-        payload = {"step_id": str(step_id), "code": "print('hello')"}
+        payload = {
+            "step_id": seeded_course_data["step_id_1"],
+            "code": "print('hello')",
+        }
         resp = await async_client.post(self.ENDPOINT, json=payload)
         assert resp.status_code in (401, 403)
 
     async def test_submit_empty_code(
-        self, async_client: AsyncClient, seeded_course, auth_headers
+        self, async_client: AsyncClient, seeded_course_data, auth_headers
     ):
-        step_id = seeded_course.sections[0].steps[0].id
-        payload = {"step_id": str(step_id), "code": ""}
+        payload = {
+            "step_id": seeded_course_data["step_id_1"],
+            "code": "",
+        }
         resp = await async_client.post(
             self.ENDPOINT, json=payload, headers=auth_headers
         )
@@ -45,13 +46,15 @@ class TestSubmitCode:
 
 class TestSubmissionStatus:
     async def test_status_pending(
-        self, async_client: AsyncClient, seeded_course, auth_headers
+        self, async_client: AsyncClient, seeded_course_data, auth_headers
     ):
         # Create a submission first
-        step_id = seeded_course.sections[0].steps[0].id
         submit_resp = await async_client.post(
             "/api/v1/execution/submit",
-            json={"step_id": str(step_id), "code": "print('hi')"},
+            json={
+                "step_id": seeded_course_data["step_id_1"],
+                "code": "print('hi')",
+            },
             headers=auth_headers,
         )
         submission_id = submit_resp.json()["submission_id"]

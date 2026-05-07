@@ -24,6 +24,7 @@ class UserResponse(BaseModel):
         email: The user's email address.
         is_active: Whether the account is active.
         is_premium: Whether the user has premium access.
+        is_superuser: Whether the user has admin privileges.
         created_at: Account creation timestamp.
     """
 
@@ -31,6 +32,7 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     is_premium: bool
+    is_superuser: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}

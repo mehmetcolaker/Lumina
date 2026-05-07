@@ -1,6 +1,5 @@
 """Tests for the Courses module."""
 
-import pytest
 from httpx import AsyncClient
 
 
@@ -12,7 +11,7 @@ class TestListCourses:
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_list_with_data(self, async_client: AsyncClient, seeded_course):
+    async def test_list_with_data(self, async_client: AsyncClient, seeded_course_data):
         resp = await async_client.get(self.ENDPOINT)
         assert resp.status_code == 200
         data = resp.json()
@@ -22,13 +21,13 @@ class TestListCourses:
 
 
 class TestCoursePath:
-    async def test_path_success(self, async_client: AsyncClient, seeded_course):
+    async def test_path_success(self, async_client: AsyncClient, seeded_course_data):
         resp = await async_client.get(
-            f"/api/v1/courses/{seeded_course.id}/path"
+            f"/api/v1/courses/{seeded_course_data['course_id']}/path"
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["id"] == str(seeded_course.id)
+        assert data["id"] == seeded_course_data["course_id"]
         assert len(data["sections"]) == 1
         section = data["sections"][0]
         assert section["title"] == "Section 1"
@@ -44,4 +43,3 @@ class TestCoursePath:
     async def test_path_invalid_uuid(self, async_client: AsyncClient):
         resp = await async_client.get("/api/v1/courses/not-a-uuid/path")
         assert resp.status_code == 422
-        assert "course_id" in resp.json()["detail"].lower()

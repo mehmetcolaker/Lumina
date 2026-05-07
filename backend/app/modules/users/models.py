@@ -19,6 +19,7 @@ class User(Base):
         hashed_password: Bcrypt hash of the user's password.
         is_active: Whether the account is active (soft-disable).
         is_premium: Whether the user has a premium subscription.
+        is_superuser: Whether the user has admin privileges.
         created_at: Timestamp of account creation.
         updated_at: Timestamp of the last profile update.
     """
@@ -39,6 +40,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_premium: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

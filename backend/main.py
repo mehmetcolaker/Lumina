@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.core.database import engine
 from app.core.middleware import register_middleware
 from app.core.redis_client import close_redis, init_redis
+from app.modules.admin.router import router as admin_router
 from app.modules.courses.router import router as courses_router
 from app.modules.execution.router import router as execution_router
 from app.modules.gamification.router import router as gamification_router
@@ -47,7 +48,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Lumina API",
     description="Interactive coding education SaaS platform — backend API.",
-    version="0.5.0",
+    version="0.6.0",
     lifespan=lifespan,
 )
 
@@ -55,6 +56,7 @@ app = FastAPI(
 register_middleware(app)
 
 # --- Routers ---
+app.include_router(admin_router)
 app.include_router(users_router)
 app.include_router(courses_router)
 app.include_router(progress_router)
