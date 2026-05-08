@@ -72,3 +72,24 @@ class CommentResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ---------- Badges ----------
+
+
+class BadgeResponse(BaseModel):
+    """A single badge owned by a user or a badge definition."""
+
+    badge_type: str
+    title: str
+    emoji: str
+    description: str | None = None
+    earned_at: datetime | None = None
+    owned: bool = False
+
+
+class UserBadgesResponse(BaseModel):
+    """All badges for a user categorized by owned/unlocked status."""
+
+    owned: list[BadgeResponse]
+    locked: list[BadgeResponse]

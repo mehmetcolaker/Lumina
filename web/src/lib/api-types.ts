@@ -189,3 +189,36 @@ export interface QuizAnswerResponse {
   explanation: string | null;
   xp_earned: number;
 }
+
+// -------------------------------------------------------------
+// Notifications
+// -------------------------------------------------------------
+
+export interface NotificationResponse {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+// -------------------------------------------------------------
+// Badges
+// -------------------------------------------------------------
+
+export interface BadgeResponse {
+  badge_type: string;
+  title: string;
+  emoji: string;
+  description: string | null;
+  earned_at: string | null;
+  owned: boolean;
+}
+
+export interface UserBadgesResponse {
+  owned: BadgeResponse[];
+  locked: BadgeResponse[];
+}

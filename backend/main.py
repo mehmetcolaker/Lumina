@@ -10,6 +10,7 @@ from app.modules.courses.router import router as courses_router
 from app.modules.execution.router import router as execution_router
 from app.modules.gamification.router import router as gamification_router
 from app.modules.monetization.router import router as monetization_router
+from app.modules.notifications.router import router as notifications_router
 from app.modules.progress.router import router as progress_router
 from app.modules.users.router import router as users_router
 
@@ -63,6 +64,7 @@ app.include_router(progress_router)
 app.include_router(execution_router)
 app.include_router(gamification_router)
 app.include_router(monetization_router)
+app.include_router(notifications_router)
 
 
 @app.get("/health", tags=["Health"])

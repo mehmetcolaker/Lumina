@@ -1,8 +1,8 @@
 """Gamification business logic.
 
 Handles XP awards (Postgres + Redis leaderboard sync), leaderboard
-queries against Redis sorted sets, line-comment CRUD, and streak
-management.
+queries against Redis sorted sets, line-comment CRUD, streak
+management, and badge awarding.
 """
 
 import logging
@@ -13,7 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis_client import LEADERBOARD_KEY, get_redis
-from app.modules.gamification.models import LineComment, UserStats
+from app.modules.gamification.models import (
+    BADGE_DEFINITIONS, BadgeType, LineComment, UserBadge, UserStats,
+)
 from app.modules.users.models import User
 
 logger = logging.getLogger(__name__)
@@ -83,6 +85,14 @@ async def award_xp(db: AsyncSession, user_id: UUID, xp_amount: int) -> int:
         stats.total_xp,
         stats.current_streak,
     )
+
+    # Check and award badges
+    new_badges = await check_and_award_xp_badges(db, user_id, stats.total_xp)
+    streak_badges = await check_and_award_streak_badges(db, user_id, stats.current_streak)
+    all_new_badges = new_badges + streak_badges
+
+    for badge in all_new_badges:
+        logger.info("Badge awarded to user %s: %s", user_id, badge.title)
 
     return stats.total_xp
 
@@ -201,6 +211,120 @@ async def get_comments_for_step(
             "created_at": comment.created_at,
         }
         for comment, email in rows
+    ]
+
+
+# ------------------------------------------------------------------
+# Badges
+# ------------------------------------------------------------------
+
+
+async def award_badge(
+    db: AsyncSession,
+    user_id: UUID,
+    badge_type: BadgeType,
+) -> UserBadge | None:
+    """Award a badge to a user if they don't already have it.
+
+    Args:
+        db: An async database session.
+        user_id: The user to award the badge to.
+        badge_type: The badge type.
+
+    Returns:
+        The new UserBadge, or None if already owned.
+    """
+    existing = await db.execute(
+        select(UserBadge).where(
+            UserBadge.user_id == user_id,
+            UserBadge.badge_type == badge_type.value,
+        )
+    )
+    if existing.scalar_one_or_none():
+        return None
+
+    definition = BADGE_DEFINITIONS.get(badge_type.value, {})
+    badge = UserBadge(
+        user_id=user_id,
+        badge_type=badge_type.value,
+        title=definition.get("title", "Rozet"),
+        emoji=definition.get("emoji", "🏅"),
+        description=definition.get("desc", ""),
+    )
+    db.add(badge)
+    await db.flush()
+    await db.refresh(badge)
+    return badge
+
+
+async def check_and_award_xp_badges(
+    db: AsyncSession,
+    user_id: UUID,
+    total_xp: int,
+) -> list[UserBadge]:
+    """Check XP thresholds and award any new badges.
+
+    Returns a list of newly awarded badges.
+    """
+    new_badges: list[UserBadge] = []
+
+    thresholds: list[tuple[int, BadgeType]] = [
+        (1, BadgeType.FIRST_XP),
+        (100, BadgeType.XP_100),
+        (1000, BadgeType.XP_1000),
+        (5000, BadgeType.XP_5000),
+    ]
+
+    for threshold, badge_type in thresholds:
+        if total_xp >= threshold:
+            badge = await award_badge(db, user_id, badge_type)
+            if badge:
+                new_badges.append(badge)
+
+    return new_badges
+
+
+async def check_and_award_streak_badges(
+    db: AsyncSession,
+    user_id: UUID,
+    streak: int,
+) -> list[UserBadge]:
+    """Check streak thresholds and award any new badges."""
+    new_badges: list[UserBadge] = []
+
+    thresholds: list[tuple[int, BadgeType]] = [
+        (3, BadgeType.STREAK_3),
+        (7, BadgeType.STREAK_7),
+        (30, BadgeType.STREAK_30),
+    ]
+
+    for threshold, badge_type in thresholds:
+        if streak >= threshold:
+            badge = await award_badge(db, user_id, badge_type)
+            if badge:
+                new_badges.append(badge)
+
+    return new_badges
+
+
+async def get_user_badges(
+    db: AsyncSession,
+    user_id: UUID,
+) -> list[UserBadge]:
+    """Return all badges for a user."""
+    result = await db.execute(
+        select(UserBadge)
+        .where(UserBadge.user_id == user_id)
+        .order_by(UserBadge.earned_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_all_badge_definitions() -> list[dict]:
+    """Return all available badge definitions for display."""
+    return [
+        {"type": k, **v}
+        for k, v in BADGE_DEFINITIONS.items()
     ]
 
 

@@ -11,6 +11,7 @@ import type {
   SubmissionVerdict,
   TestResult,
   SubmissionStatusResponse,
+  CommentResponse,
 } from "@/lib/api-types";
 import { slugify, deriveLevel, totalCourseXp, estimateHours } from "@/lib/courses";
 import { Layout } from "@/components/site/Layout";
@@ -19,11 +20,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   ArrowLeft, ArrowRight, BookOpen, CheckCircle2, CheckCircle, Clock,
   Code2, HelpCircle, PlayCircle, Trophy, Zap, ChevronRight,
   Lock, AlertCircle, RotateCcw, Terminal, Loader2, History,
+  MessageSquare, Send,
 } from "lucide-react";
 import { connectExecutionWS } from "@/lib/ws";
 import { tokenStorage } from "@/lib/api";
@@ -509,6 +511,34 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
     enabled: showHistory && !!user,
     staleTime: 10_000,
   });
+
+  // Satir yorumlari
+  const [commentLine, setCommentLine] = useState<number | null>(null);
+  const [commentText, setCommentText] = useState("");
+
+  const { data: lineComments, refetch: refetchComments } = useQuery({
+    queryKey: ["line-comments", step.id],
+    queryFn: () => api.get<CommentResponse[]>(`/gamification/comments/${step.id}`),
+    staleTime: 30_000,
+  });
+
+  const submitComment = useCallback(async () => {
+    if (!commentText.trim() || commentLine === null) return;
+    try {
+      await api.post("/gamification/comments", {
+        step_id: step.id,
+        line_number: commentLine,
+        content: commentText.trim(),
+      });
+      setCommentText("");
+      setCommentLine(null);
+      refetchComments();
+      toast.success("Yorum kaydedildi!");
+    } catch {
+      toast.error("Yorum gonderilemedi.");
+    }
+  }, [commentText, commentLine, step.id, refetchComments]);
+
   const revealSolution = () => { setCode(solution); setRevealed(true); setHintLevel(hints.length); };
   const reset = () => { setCode(starter); setRevealed(false); setResult(null); setHintLevel(0); };
 
@@ -642,8 +672,71 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
           language="python"
           minHeight="300px"
           placeholder="# Kodunu buraya yaz..."
+          onLineClick={user ? (line) => setCommentLine(commentLine === line ? null : line) : undefined}
         />
       </div>
+
+      {/* Satır yorumu girişi */}
+      {commentLine !== null && user && (
+        <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-blue-400 flex items-center gap-1">
+              <MessageSquare className="h-3.5 w-3.5" /> Satır {commentLine} için yorum
+            </span>
+            <button
+              onClick={() => { setCommentLine(null); setCommentText(""); }}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              İptal
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Bu satır hakkında yorum yap..."
+              className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm outline-none focus:border-primary"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && submitComment()}
+            />
+            <Button
+              size="icon"
+              onClick={submitComment}
+              disabled={!commentText.trim()}
+              className="shrink-0 bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Satır yorumları — inline thread */}
+      {lineComments && lineComments.length > 0 && (
+        <div className="space-y-2">
+          {[...new Set(lineComments.map((c) => c.line_number))].map((ln) => {
+            const lineCommentsForLine = lineComments.filter((c) => c.line_number === ln);
+            return (
+              <div key={ln} className="rounded-lg border border-border p-3 bg-card/50">
+                <div className="text-xs text-muted-foreground font-semibold mb-2 flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" /> Satır {ln}
+                </div>
+                <div className="space-y-2">
+                  {lineCommentsForLine.map((c) => (
+                    <div key={c.id} className="text-sm">
+                      <span className="text-xs font-medium text-primary">{c.email.split("@")[0]}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {new Date(c.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <p className="text-sm text-foreground mt-0.5">{c.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Çalıştır butonu */}
       <div className="flex items-center gap-3">

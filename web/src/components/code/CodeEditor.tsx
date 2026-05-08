@@ -102,6 +102,7 @@ export interface CodeEditorProps {
   readOnly?: boolean;
   minHeight?: string;
   placeholder?: string;
+  onLineClick?: (line: number) => void;
 }
 
 export function CodeEditor({
@@ -111,6 +112,7 @@ export function CodeEditor({
   readOnly = false,
   minHeight = "300px",
   placeholder = "Kodunu buraya yaz...",
+  onLineClick,
 }: CodeEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -179,6 +181,18 @@ export function CodeEditor({
     const view = new EditorView({
       state: startState,
       parent: containerRef.current,
+    });
+
+    // Add click handler for line numbers (comments)
+    view.dom.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains("cm-lineNumbers") || target.closest(".cm-lineNumbers")) {
+        const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+        if (pos != null) {
+          const line = view.state.doc.lineAt(pos);
+          onLineClick?.(line.number);
+        }
+      }
     });
 
     viewRef.current = view;

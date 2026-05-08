@@ -6,10 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.modules.gamification import services
 from app.modules.gamification.schemas import (
+    BadgeResponse,
     CommentCreate,
     CommentResponse,
     LeaderboardEntry,
     LeaderboardResponse,
+    UserBadgesResponse,
 )
 from app.modules.users.router import get_current_user
 from app.modules.users.schemas import UserResponse
@@ -100,3 +102,48 @@ async def get_comments(
 
     comments_data = await services.get_comments_for_step(db, step_uuid)
     return [CommentResponse(**c) for c in comments_data]
+
+
+@router.get(
+    "/badges",
+    response_model=UserBadgesResponse,
+    summary="Get all badges for the current user",
+)
+async def get_badges(
+    db: AsyncSession = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+) -> UserBadgesResponse:
+    """Return all badges (owned + available) for the authenticated user."""
+    owned_badges = await services.get_user_badges(db, current_user.id)
+    all_defs = await services.get_all_badge_definitions()
+
+    owned_set = {b.badge_type for b in owned_badges}
+
+    owned_list: list[BadgeResponse] = []
+    locked_list: list[BadgeResponse] = []
+
+    for b in owned_badges:
+        owned_list.append(
+            BadgeResponse(
+                badge_type=b.badge_type,
+                title=b.title,
+                emoji=b.emoji,
+                description=b.description,
+                earned_at=b.earned_at,
+                owned=True,
+            )
+        )
+
+    for d in all_defs:
+        if d["type"] not in owned_set:
+            locked_list.append(
+                BadgeResponse(
+                    badge_type=d["type"],
+                    title=d["title"],
+                    emoji=d["emoji"],
+                    description=d["desc"],
+                    owned=False,
+                )
+            )
+
+    return UserBadgesResponse(owned=owned_list, locked=locked_list)
