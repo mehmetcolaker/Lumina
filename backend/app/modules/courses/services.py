@@ -1,18 +1,15 @@
 from copy import deepcopy
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.courses.models import Course, Section, Step
+from app.modules.courses.models import Course, LearningPath, PathLevel, Section, Step
+from app.modules.progress.models import UserProgress
 
 
 def _strip_correct_option(step: Step) -> Step:
-    """Remove ``correct_option`` from a step's content_data in-place.
-
-    This prevents quiz answer keys from being leaked to the client.
-    """
     if step.content_data and "correct_option" in step.content_data:
         step.content_data = deepcopy(step.content_data)
         step.content_data.pop("correct_option", None)
@@ -20,14 +17,6 @@ def _strip_correct_option(step: Step) -> Step:
 
 
 async def list_courses(db: AsyncSession) -> list[Course]:
-    """Return all courses ordered by title.
-
-    Args:
-        db: An async database session.
-
-    Returns:
-        A list of all Course instances.
-    """
     result = await db.execute(select(Course).order_by(Course.title))
     return list(result.scalars().all())
 
@@ -36,20 +25,9 @@ async def get_course_with_path(
     db: AsyncSession,
     course_id: str,
 ) -> Course | None:
-    """Retrieve a single course with its sections and steps eagerly loaded.
-
-    Returns:
-        The Course with sections and steps populated, or None if not found.
-
-    Note:
-        ``correct_option`` is stripped from quiz step content_data to
-        prevent answer keys being leaked to the client.
-    """
     stmt = (
         select(Course)
-        .options(
-            selectinload(Course.sections).selectinload(Section.steps)
-        )
+        .options(selectinload(Course.sections).selectinload(Section.steps))
         .where(Course.id == UUID(course_id))
     )
     result = await db.execute(stmt)
@@ -58,3 +36,84 @@ async def get_course_with_path(
         for sec in course.sections:
             sec.steps = [_strip_correct_option(s) for s in sec.steps]
     return course
+
+
+# ── Learning Path (Roadmap) ────────────────────────────
+
+
+async def list_paths(db: AsyncSession) -> list[LearningPath]:
+    """Return all learning paths ordered by their sort order."""
+    result = await db.execute(
+        select(LearningPath)
+        .options(selectinload(LearningPath.levels).selectinload(PathLevel.course))
+        .order_by(LearningPath.order)
+    )
+    return list(result.scalars().all())
+
+
+async def get_path_progress(
+    db: AsyncSession,
+    path_id: UUID,
+    user_id: UUID,
+) -> LearningPath | None:
+    """Return a learning path with each level's progress and unlock status
+    for the given user.
+
+    A level is unlocked if:
+        - It is the first level (order=0), OR
+        - The previous level has >= required_progress_pct steps completed.
+    """
+    result = await db.execute(
+        select(LearningPath)
+        .options(selectinload(LearningPath.levels).selectinload(PathLevel.course))
+        .where(LearningPath.id == path_id)
+    )
+    path = result.scalar_one_or_none()
+    if path is None:
+        return None
+
+    # Calculate per-level progress
+    for i, level in enumerate(path.levels):
+        course = level.course
+        if not course:
+            continue
+
+        # Count total steps in this course
+        total_steps_query = await db.execute(
+            select(func.count())
+            .select_from(Step)
+            .join(Section, Step.section_id == Section.id)
+            .where(Section.course_id == course.id)
+        )
+        total_steps = total_steps_query.scalar() or 0
+
+        # Count completed steps for this user
+        subq = (
+            select(Step.id)
+            .join(Section, Step.section_id == Section.id)
+            .where(Section.course_id == course.id)
+        ).subquery()
+
+        completed_query = await db.execute(
+            select(func.count())
+            .select_from(UserProgress)
+            .where(
+                UserProgress.user_id == user_id,
+                UserProgress.step_id.in_(select(subq.c.id)),
+                UserProgress.is_completed.is_(True),
+            )
+        )
+        completed = completed_query.scalar() or 0
+
+        progress_pct = round((completed / total_steps) * 100) if total_steps > 0 else 0
+        level._progress_pct = progress_pct  # type: ignore[attr-defined]
+
+        # Unlock logic
+        if i == 0:
+            level._unlocked = True  # type: ignore[attr-defined]
+        else:
+            prev_level = path.levels[i - 1]
+            prev_pct = getattr(prev_level, "_progress_pct", 0)
+            level._unlocked = prev_pct >= prev_level.required_progress_pct  # type: ignore[attr-defined]
+
+    return path

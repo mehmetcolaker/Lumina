@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as RoadmapRouteImport } from './routes/roadmap'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -22,6 +23,11 @@ import { Route as CoursesSlugRouteImport } from './routes/courses.$slug'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapRoute = RoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
   '/signup': typeof SignupRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses/': typeof CoursesIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
   '/signup': typeof SignupRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses': typeof CoursesIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
   '/signup': typeof SignupRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/courses/': typeof CoursesIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/profile'
+    | '/roadmap'
     | '/signup'
     | '/courses/$slug'
     | '/courses/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/profile'
+    | '/roadmap'
     | '/signup'
     | '/courses/$slug'
     | '/courses'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/profile'
+    | '/roadmap'
     | '/signup'
     | '/courses/$slug'
     | '/courses/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  RoadmapRoute: typeof RoadmapRoute
   SignupRoute: typeof SignupRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmap': {
+      id: '/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof RoadmapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  RoadmapRoute: RoadmapRoute,
   SignupRoute: SignupRoute,
   CoursesSlugRoute: CoursesSlugRoute,
   CoursesIndexRoute: CoursesIndexRoute,

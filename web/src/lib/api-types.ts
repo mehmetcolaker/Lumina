@@ -66,8 +66,28 @@ export interface CoursePathResponse extends CourseResponse {
 
 
 // -------------------------------------------------------------
-// Progress
+// Learning Path (Roadmap)
 // -------------------------------------------------------------
+
+export interface PathLevelResponse {
+  id: string;
+  level_name: string;
+  order: number;
+  required_progress_pct: number;
+  course: CourseResponse;
+  unlocked: boolean;
+  progress_pct: number;
+}
+
+export interface LearningPathResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  language: string;
+  icon: string | null;
+  order: number;
+  levels: PathLevelResponse[];
+}
 
 export interface MyPathStep {
   step_id: string;
