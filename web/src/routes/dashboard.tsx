@@ -8,10 +8,10 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
-import type { CourseResponse, LeaderboardResponse } from "@/lib/api-types";
+import type { CourseResponse, LeaderboardResponse, SubmissionStatusResponse } from "@/lib/api-types";
 import { progressToNextLevel, rankFromXp } from "@/lib/level";
 import { slugify } from "@/lib/courses";
-import { Zap, Flame, Trophy, BookOpen, Target, TrendingUp } from "lucide-react";
+import { Zap, Flame, Trophy, BookOpen, Target, TrendingUp, History, Terminal, CheckCircle, XCircle, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
@@ -38,6 +38,14 @@ function Dashboard() {
     queryKey: ["courses"],
     queryFn: () => api.get<CourseResponse[]>("/courses/"),
     enabled: !!user,
+  });
+
+  // Recent submissions
+  const { data: recentSubs } = useQuery<SubmissionStatusResponse[]>({
+    queryKey: ["recent-submissions"],
+    queryFn: () => api.get<SubmissionStatusResponse[]>("/execution/all-submissions?limit=5"),
+    enabled: !!user,
+    refetchInterval: 30_000,
   });
 
   if (authLoading) {
@@ -173,10 +181,7 @@ function Dashboard() {
 
         <Reveal delay={200}>
           <div className="mt-10 flex gap-3">
-            <Button
-              asChild
-              className="bg-[image:var(--gradient-primary)] text-primary-foreground glow-on-hover"
-            >
+            <Button asChild className="bg-[image:var(--gradient-primary)] text-primary-foreground glow-on-hover">
               <Link to="/courses">Browse all courses</Link>
             </Button>
             <Button asChild variant="outline" className="hover-scale">
@@ -185,6 +190,52 @@ function Dashboard() {
           </div>
         </Reveal>
       </section>
+
+      {/* Recent Activity */}
+      {recentSubs && recentSubs.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-12">
+          <Reveal>
+            <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
+              <History className="h-5 w-5 text-primary" /> Son Aktivite
+            </h2>
+          </Reveal>
+          <Card className="divide-y divide-border overflow-hidden">
+            {recentSubs.slice(0, 5).map((s, i) => (
+              <Reveal key={s.submission_id} delay={i * 50}>
+                <div className="flex items-center gap-3 p-4 hover:bg-accent/40 transition-colors">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                    s.verdict === "pass" ? "bg-emerald-500/10 text-emerald-400"
+                      : s.verdict === "wrong_answer" ? "bg-red-500/10 text-red-400"
+                      : "bg-zinc-500/10 text-zinc-400"
+                  }`}>
+                    {s.verdict === "pass" ? <CheckCircle className="h-4 w-4" />
+                      : s.verdict === "wrong_answer" ? <XCircle className="h-4 w-4" />
+                      : <Terminal className="h-4 w-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {s.verdict ?? "—"}
+                      </Badge>
+                      {s.runtime_ms != null && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {s.runtime_ms}ms
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">{s.code?.slice(0, 80)}</p>
+                  </div>
+                  {s.created_at && (
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {new Date(s.created_at).toLocaleDateString("tr-TR")}
+                    </span>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </Card>
+        </section>
+      )}
     </Layout>
   );
 }

@@ -125,6 +125,24 @@ export interface CommentResponse {
 
 export type SubmissionStatus = "pending" | "running" | "completed" | "failed";
 
+export type SubmissionVerdict =
+  | "pass"
+  | "fail"
+  | "runtime_error"
+  | "timeout"
+  | "wrong_answer"
+  | "pending";
+
+export interface TestResult {
+  name: string;
+  input: string;
+  expected: string;
+  actual: string;
+  passed: boolean;
+  stderr: string;
+  runtime_ms: number;
+}
+
 export interface CodeSubmitResponse {
   submission_id: string;
   status: SubmissionStatus;
@@ -133,5 +151,41 @@ export interface CodeSubmitResponse {
 export interface SubmissionStatusResponse {
   submission_id: string;
   status: SubmissionStatus;
+  code: string | null;
   output: string | null;
+  stdout: string | null;
+  stderr: string | null;
+  exit_code: number | null;
+  runtime_ms: number | null;
+  verdict: SubmissionVerdict | null;
+  test_results: TestResult[] | null;
+  created_at: string | null;
+}
+
+export interface ExecutionResult {
+  submission_id: string;
+  status: SubmissionStatus;
+  output: string | null;
+  stdout: string | null;
+  stderr: string | null;
+  exit_code: number | null;
+  runtime_ms: number | null;
+  verdict: SubmissionVerdict | null;
+  test_results: TestResult[] | null;
+}
+
+// -------------------------------------------------------------
+// Quiz Answer
+// -------------------------------------------------------------
+
+export interface QuizAnswerRequest {
+  step_id: string;
+  option_id: string;
+}
+
+export interface QuizAnswerResponse {
+  is_correct: boolean;
+  correct_option: string | null;
+  explanation: string | null;
+  xp_earned: number;
 }

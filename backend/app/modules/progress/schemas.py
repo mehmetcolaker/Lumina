@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class StepCompleteResponse(BaseModel):
@@ -17,6 +17,34 @@ class StepCompleteResponse(BaseModel):
     step_id: UUID
     completed_at: datetime
     xp_earned: int
+
+
+class QuizAnswerRequest(BaseModel):
+    """Request body for submitting a quiz answer.
+
+    Attributes:
+        step_id: The UUID of the quiz step.
+        option_id: The ID of the selected option (e.g. "a", "b", "c", "d").
+    """
+
+    step_id: UUID
+    option_id: str = Field(..., min_length=1, max_length=10)
+
+
+class QuizAnswerResponse(BaseModel):
+    """Response after validating a quiz answer.
+
+    Attributes:
+        is_correct: Whether the answer was correct.
+        correct_option: The correct option ID (only if wrong).
+        explanation: The answer explanation.
+        xp_earned: XP earned if correct, 0 if wrong.
+    """
+
+    is_correct: bool
+    correct_option: str | None = None
+    explanation: str | None = None
+    xp_earned: int = 0
 
 
 class MyPathStep(BaseModel):

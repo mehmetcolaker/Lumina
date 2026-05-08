@@ -1,7 +1,11 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.modules.courses.models import Step
 from app.modules.courses.services import get_course_with_path
 from app.modules.gamification.services import award_xp
 from app.modules.progress import services as progress_services
@@ -9,12 +13,72 @@ from app.modules.progress.schemas import (
     MyPathResponse,
     MyPathSection,
     MyPathStep,
+    QuizAnswerRequest,
+    QuizAnswerResponse,
     StepCompleteResponse,
 )
 from app.modules.users.router import get_current_user
 from app.modules.users.schemas import UserResponse
 
 router = APIRouter(prefix="/api/v1/progress", tags=["Progress"])
+
+
+@router.post(
+    "/steps/{step_id}/answer",
+    response_model=QuizAnswerResponse,
+    summary="Submit a quiz answer for server-side validation",
+)
+async def answer_quiz(
+    step_id: str,
+    payload: QuizAnswerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+) -> QuizAnswerResponse:
+    """Validate a quiz answer server-side.
+
+    The front-end sends the selected option ID, the backend checks it
+    against the stored ``correct_option`` (which is never sent to the
+    client), and returns the result.
+
+    If the answer is correct, the step is automatically marked complete
+    and XP is awarded.
+    """
+    try:
+        step_uuid = UUID(step_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid step_id format.")
+
+    step = await db.get(Step, step_uuid)
+    if step is None:
+        raise HTTPException(status_code=404, detail="Step not found.")
+    if step.step_type.value != "quiz":
+        raise HTTPException(status_code=400, detail="Step is not a quiz.")
+
+    content = step.content_data or {}
+    correct_option: str = content.get("correct_option", "")
+    explanation: str | None = content.get("explanation")
+
+    is_correct = payload.option_id == correct_option
+
+    if is_correct:
+        xp_earned = step.xp_reward
+        try:
+            await progress_services.mark_step_complete(db, current_user.id, step_uuid)
+            await award_xp(db, current_user.id, xp_earned)
+        except ValueError:
+            pass  # already completed
+        return QuizAnswerResponse(
+            is_correct=True,
+            explanation=explanation,
+            xp_earned=xp_earned,
+        )
+    else:
+        return QuizAnswerResponse(
+            is_correct=False,
+            correct_option=correct_option,
+            explanation=explanation,
+            xp_earned=0,
+        )
 
 
 @router.post(

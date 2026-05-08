@@ -31,7 +31,7 @@ WS_TIMEOUT_SECONDS = 120
 
 
 # ------------------------------------------------------------------
-# HTTP endpoints (kept as fallback for browsers that lack WS)
+# HTTP endpoints
 # ------------------------------------------------------------------
 
 
@@ -47,7 +47,7 @@ async def submit_code(
     current_user: UserResponse = Depends(get_current_user),
 ) -> CodeSubmitResponse:
     """Accept user code, create a pending ``Submission`` record, and
-    enqueue a Celery task to run it in an isolated Docker sandbox.
+    enqueue a Celery task to run it in an isolated sandbox.
 
     After submitting, the front-end can either poll via
     ``GET /status/{submission_id}`` or connect via
@@ -112,7 +112,56 @@ async def get_submission_status(
         submission_id=submission.id,
         status=submission.status.value,
         output=submission.output,
+        stdout=submission.stdout,
+        stderr=submission.stderr,
+        exit_code=submission.exit_code,
+        runtime_ms=submission.runtime_ms,
+        verdict=submission.verdict.value if submission.verdict else None,
     )
+
+
+@router.get(
+    "/submissions",
+    summary="List recent submissions for a step",
+)
+async def list_submissions(
+    step_id: str = Query(..., description="Filter by step UUID"),
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+) -> list[SubmissionStatusResponse]:
+    """Return the most recent submissions for a given step by the
+    current user.
+    """
+    try:
+        step_uuid = UUID(step_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid step_id format.")
+
+    result = await db.execute(
+        select(Submission)
+        .where(
+            Submission.user_id == current_user.id,
+            Submission.step_id == step_uuid,
+        )
+        .order_by(Submission.created_at.desc())
+        .limit(limit)
+    )
+    submissions = result.scalars().all()
+
+    return [
+        SubmissionStatusResponse(
+            submission_id=s.id,
+            status=s.status.value,
+            output=s.output,
+            stdout=s.stdout,
+            stderr=s.stderr,
+            exit_code=s.exit_code,
+            runtime_ms=s.runtime_ms,
+            verdict=s.verdict.value if s.verdict else None,
+        )
+        for s in submissions
+    ]
 
 
 # ------------------------------------------------------------------
@@ -162,7 +211,16 @@ async def execution_websocket(
             ws://host/api/v1/execution/ws/{submission_id}?token=<JWT>
 
         2. Receive (JSON)::
-            {"submission_id": "...", "status": "completed/failed", "output": "..."}
+            {
+              "submission_id": "...",
+              "status": "completed/failed",
+              "output": "...",
+              "stdout": "...",
+              "stderr": "...",
+              "exit_code": 0,
+              "runtime_ms": 142,
+              "verdict": "pass"
+            }
 
         3. Server closes the connection.
 
@@ -205,6 +263,11 @@ async def execution_websocket(
                         "submission_id": submission_id,
                         "status": submission.status.value,
                         "output": submission.output,
+                        "stdout": submission.stdout,
+                        "stderr": submission.stderr,
+                        "exit_code": submission.exit_code,
+                        "runtime_ms": submission.runtime_ms,
+                        "verdict": submission.verdict.value if submission.verdict else None,
                     }
                 )
             )

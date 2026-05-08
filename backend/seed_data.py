@@ -107,6 +107,11 @@ PYTHON_SECTIONS = [
                         {"id": "d", "label": "class = \"Python\""},
                     ],
                     "correct_option": "c",
+                    "hints": [
+                        "Python değişken adları harf veya alt çizgi (_) ile başlamalı, rakamla başlayamaz.",
+                        "Değişken adları özel karakter (boşluk, tire, $, @) içeremez. Sadece harf, rakam, alt çizgi kullanılabilir.",
+                        "Python'da ayrılmış (reserved) kelimeler değişken adı olarak kullanılamaz: if, else, class, for, while..."
+                    ],
                     "explanation": (
                         "`toplam_sayi` geçerlidir çünkü harf ile başlar, "
                         "alt çizgi içerir ve Python'da ayrılmış bir kelime değildir.\n\n"
@@ -143,6 +148,16 @@ PYTHON_SECTIONS = [
                         "print(f\"Yaş: {yas}\")"
                     ),
                     "expected_output": "İsim: Ada Lovelace\nYaş: 207",
+                    "compare_mode": "trim",
+                    "test_cases": [
+                        {"input": "", "expected": "İsim: Ada Lovelace\nYaş: 207"},
+                        {"input": "isim = \"Einstein\"\nyas = 150\nprint(f\"İsim: {isim}\")\nprint(f\"Yaş: {yas}\")", "expected": "İsim: Einstein\nYaş: 150"},
+                    ],
+                    "hints": [
+                        "Bu görevde değişken tanımlama ve f-string kullanımını öğreneceksin.",
+                        "Değişkenlere değer atarken `degisken_adi = deger` kalıbını kullan. Örn: `isim = \"Ada\"`",
+                        "f-string'ler `print(f\"Metin {degisken}\")` şeklinde yazılır. İsim ve Yaş değerlerini ayrı satırlarda yazdır."
+                    ],
                 },
             },
         ],
@@ -197,6 +212,11 @@ PYTHON_SECTIONS = [
                         {"id": "d", "label": "Hata verir"},
                     ],
                     "correct_option": "a",
+                    "hints": [
+                        "İfadeyi parçalara ayır: önce `x > 5` sonra `x < 20` hesapla.",
+                        "`and` operatörü: eğer her iki koşul da doğruysa sonuç True olur.",
+                        "`x > 5` = True, `x < 20` = True. True and True = ?"
+                    ],
                     "explanation": (
                         "`x > 5` → `10 > 5` → `True`\n"
                         "`x < 20` → `10 < 20` → `True`\n"
@@ -238,6 +258,17 @@ PYTHON_SECTIONS = [
                         "    print(\"FF\")"
                     ),
                     "expected_output": "BB",
+                    "compare_mode": "trim",
+                    "test_cases": [
+                        {"input": "puan = 95", "expected": "AA"},
+                        {"input": "puan = 62", "expected": "CC"},
+                        {"input": "puan = 30", "expected": "FF"},
+                    ],
+                    "hints": [
+                        "`if/elif/else` yapısında sıralama önemlidir — önce en yüksek koşul kontrol edilir.",
+                        "`elif puan >= 70:` ile 70-89 aralığını yakalarsın.",
+                        "Geriye kalan tüm durumlar (0-49) `else` bloğunda işlenir."
+                    ],
                 },
             },
         ],
@@ -321,6 +352,11 @@ PYTHON_SECTIONS = [
                         {"id": "d", "label": "20"},
                     ],
                     "correct_option": "b",
+                    "hints": [
+                        "`range(1, 6)` hangi sayıları üretir? range'in bitiş değeri dahil edilir mi?",
+                        "Döngü her adımda `toplam += i` ile toplamı güncelliyor. Hangi değerler toplanıyor?",
+                        "range(1,6) = [1, 2, 3, 4, 5]. 1+2+3+4+5 = ?"
+                    ],
                     "explanation": (
                         "`range(1, 6)` → `[1, 2, 3, 4, 5]` (6 dahil değil!)\n\n"
                         "`1 + 2 + 3 + 4 + 5 = 15`\n\n"
@@ -356,6 +392,17 @@ PYTHON_SECTIONS = [
                         "print(f\"En büyük sayı: {en_buyuk}\")"
                     ),
                     "expected_output": "En büyük sayı: 99",
+                    "compare_mode": "trim",
+                    "test_cases": [
+                        {"input": "", "expected": "En büyük sayı: 99"},
+                        {"input": "sayilar = [1, 2, 3]\nfor s in sayilar:\n    if s > en_buyuk:\n        en_buyuk = s\nprint(f\"En büyük sayı: {en_buyuk}\")", "expected": "En büyük sayı: 3"},
+                        {"input": "sayilar = [-5, -2, -10]\nfor s in sayilar:\n    if s > en_buyuk:\n        en_buyuk = s\nprint(f\"En büyük sayı: {en_buyuk}\")", "expected": "En büyük sayı: -2"},
+                    ],
+                    "hints": [
+                        "İlk sayıyı (`sayilar[0]`) başlangıçtaki en büyük sayı olarak al.",
+                        "`for` döngüsüyle her sayıyı `en_buyuk` ile karşılaştır.",
+                        "Eğer `sayi > en_buyuk` ise `en_buyuk`'u güncelle."
+                    ],
                 },
             },
         ],
@@ -413,6 +460,11 @@ PYTHON_SECTIONS = [
                         {"id": "d", "label": "25"},
                     ],
                     "correct_option": "b",
+                    "hints": [
+                        "`b=10` fonksiyona varsayılan parametre olarak verilmiş. Eğer b gönderilmezse otomatik 10 alır.",
+                        "Fonksiyon çağrısı: `hesapla(5)` → a=5, b=10. İşlem: `5 * 2 + 10`",
+                        "5*2=10, 10+10=20"
+                    ],
                     "explanation": (
                         "`hesapla(5)` çağrılınca `b` varsayılan değer `10`'u alır.\n\n"
                         "`5 * 2 + 10 = 10 + 10 = 20`"
@@ -467,6 +519,15 @@ PYTHON_SECTIONS = [
                         "print(bol(7, 0))"
                     ),
                     "expected_output": "15\n7\n24\n5.0\nSıfıra bölme hatası",
+                    "compare_mode": "trim",
+                    "test_cases": [
+                        {"input": "", "expected": "15\n7\n24\n5.0\nSıfıra bölme hatası"},
+                    ],
+                    "hints": [
+                        "`cikar(a, b)` çıkarma operatörü `-` kullan: `return a - b`",
+                        "`carp(a, b)` çarpma operatörü `*` kullan: `return a * b`",
+                        "`bol(a, b)` için önce `if b == 0:` kontrolü yap, sonra `return a / b`"
+                    ],
                 },
             },
         ],
@@ -518,6 +579,11 @@ PYTHON_SECTIONS = [
                         {"id": "d", "label": "dict.all()"},
                     ],
                     "correct_option": "b",
+                    "hints": [
+                        "Sözlük metodlarının isimleri İngilizce'dir. 'anahtar'ın İngilizcesi nedir?",
+                        "items = öğeler, keys = anahtarlar, values = değerler",
+                        "Cevap: dict.keys() — tüm anahtarları döndürür."
+                    ],
                     "explanation": (
                         "- `dict.keys()` → tüm **anahtarlar**\n"
                         "- `dict.values()` → tüm **değerler**\n"
@@ -567,6 +633,12 @@ PYTHON_SECTIONS = [
                         "print(f\"En başarılı: {en_iyi} ({notlar[en_iyi]}\")"
                     ),
                     "expected_output": "Sınıf ortalaması: 87.6\nEn başarılı: Zeynep (95",
+                    "compare_mode": "contains",
+                    "hints": [
+                        "`sum(notlar.values())` tüm notları toplar, `len(notlar)` öğrenci sayısını verir.",
+                        "Ortalama için toplamı sayıya böl.",
+                        "En yüksek notu bulmak için `max(notlar, key=notlar.get)` kullan."
+                    ],
                 },
             },
         ],
@@ -665,13 +737,18 @@ JS_SECTIONS = [
                         {"id": "d", "label": "Global scope'ta tanımlanır"},
                     ],
                     "correct_option": "b",
+                    "hints": [
+                        "JavaScript'te `const`, `let` ve `var` olmak uzere 3 tur degisken bildirimi vardir.",
+                        "`const` = constant (sabit). Sabit seyler yeniden atanabilir mi?",
+                        "const ile yeniden `=` atamasi yapilamaz ama dizi/obje icerigi degistirilebilir."
+                    ],
                     "explanation": (
-                        "`const` ile tanımlanan değişkene yeniden değer **atanamaz** (`=`).\n\n"
-                        "Ancak objeler ve diziler için iç içerik değiştirilebilir:\n"
+                        "`const` ile tanimlanan degiskene yeniden deger **atanamaz** (`=`).\n\n"
+                        "Ancak objeler ve diziler icin ic icerik degistirilebilir:\n"
                         "```js\n"
                         "const arr = [1, 2];\n"
-                        "arr.push(3);  // ✅ geçerli\n"
-                        "arr = [4, 5]; // ❌ hata!\n"
+                        "arr.push(3);  // gecerli\n"
+                        "arr = [4, 5]; // hata!\n"
                         "```"
                     ),
                 },
@@ -710,6 +787,12 @@ JS_SECTIONS = [
                         "console.log(\"Toplam:\", toplam);"
                     ),
                     "expected_output": "Kareler: [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]\nÇiftler: [2, 4, 6, 8, 10]\nToplam: 55",
+                    "compare_mode": "trim",
+                    "hints": [
+                        "`map()` her elemanı dönüştürür: `sayilar.map(x => x * x)`",
+                        "`filter()` koşula uyanları seçer: `sayilar.filter(x => x % 2 === 0)`",
+                        "`reduce()` tüm elemanları biriktirir: `sayilar.reduce((acc, x) => acc + x, 0)`"
+                    ],
                 },
             },
         ],
@@ -803,11 +886,39 @@ SQL_SECTIONS = [
                         {"id": "d", "label": "WHERE 100 < fiyat > 500"},
                     ],
                     "correct_option": "b",
+                    "hints": [
+                        "SQL'de bir aralığı sorgulamak için özel bir anahtar kelime vardır.",
+                        "Cevap: BETWEEN. `WHERE fiyat BETWEEN 100 AND 500` yazılır.",
+                        "BETWEEN 100 AND 500, 100 ve 500 dahil tüm değerleri seçer."
+                    ],
                     "explanation": (
                         "`BETWEEN 100 AND 500` — 100 ve 500 **dahil** tüm değerleri seçer.\n\n"
                         "Alternatif: `WHERE fiyat >= 100 AND fiyat <= 500`\n\n"
                         "Diğer seçenekler SQL sözdizimi hatası verir."
                     ),
+                },
+            },
+            {
+                "title": "Temel SELECT Sorgusu",
+                "step_type": StepType.CODE,
+                "order": 3,
+                "xp_reward": 30,
+                "content_data": {
+                    "language": "sql",
+                    "instruction": (
+                        "SQLite In-Memory veritabanında `users` tablosunu sorgula.\n\n"
+                        "Kullanılabilir tablolar: `users`, `products`, `orders`, `categories`\n\n"
+                        "**Görev:** 25 yaşından büyük kullanıcıların isim, email ve şehir bilgilerini getir."
+                    ),
+                    "starter_code": "SELECT name, email, city\nFROM users\nWHERE age > 25;",
+                    "solution": "SELECT name, email, city FROM users WHERE age > 25;",
+                    "expected_output": "name | email | city\n---\nAli Yılmaz | ali@example.com | İstanbul\nAyşe Demir | ayse@example.com | Ankara\nZeynep Çelik | zeynep@example.com | İstanbul\nCan Öztürk | can@example.com | Bursa",
+                    "compare_mode": "contains",
+                    "hints": [
+                        "Kullanılabilir tablolar: users, products, orders, categories",
+                        "WHERE ile yaş filtresi: `WHERE age > 25`",
+                        "Sadece name, email, city sütunlarını seç."
+                    ],
                 },
             },
         ],

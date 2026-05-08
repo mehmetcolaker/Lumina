@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, Text, Uuid
+from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, Text, Uuid, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -17,19 +17,33 @@ class SubmissionStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class SubmissionVerdict(str, enum.Enum):
+    """Evaluation result of a graded submission."""
+
+    PASS = "pass"
+    FAIL = "fail"
+    RUNTIME_ERROR = "runtime_error"
+    TIMEOUT = "timeout"
+    WRONG_ANSWER = "wrong_answer"
+    PENDING = "pending"
+
+
 class Submission(Base):
     """Records a single code submission from a user.
-
-    Each submission captures the code snapshot, its execution status,
-    and the final output or error message produced by the sandbox.
 
     Attributes:
         id: Primary key (UUID v4).
         user_id: Foreign key to the submitting User.
         step_id: Foreign key to the Step the code belongs to.
         code: The raw source code submitted by the user.
-        status: Current execution status (pending/running/completed/failed).
-        output: Combined stdout + stderr from the sandbox run.
+        status: Current execution status.
+        output: Legacy combined stdout+stderr.
+        stdout: Standart cikti.
+        stderr: Hata ciktisi.
+        exit_code: Cikis kodu (0 = basarili).
+        runtime_ms: Calisma suresi milisaniye.
+        verdict: Degerlendirme sonucu.
+        test_results: JSON array of per-test-case results.
         created_at: Timestamp of submission creation.
     """
 
@@ -64,6 +78,24 @@ class Submission(Base):
         index=True,
     )
     output: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    stdout: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    stderr: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    exit_code: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    runtime_ms: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    verdict: Mapped[SubmissionVerdict | None] = mapped_column(
+        SAEnum(
+            SubmissionVerdict,
+            name="submission_verdict_enum",
+            create_constraint=True,
+        ),
+        nullable=True,
+        default=None,
+    )
+    test_results: Mapped[list[dict] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        default=None,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

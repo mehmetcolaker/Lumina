@@ -3,9 +3,56 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.modules.courses.models import Course, Section, Step
 from app.modules.progress.models import UserProgress
+
+
+async def _get_previous_step(
+    db: AsyncSession,
+    step_id: UUID,
+) -> Step | None:
+    """Return the step that comes immediately before the given step
+    in the course, or None if this is the first step."""
+    step = await db.get(Step, step_id)
+    if step is None:
+        return None
+
+    # Load section.course relationship
+    stmt = (
+        select(Step)
+        .options(selectinload(Step.section))
+        .where(Step.id == step_id)
+    )
+    result = await db.execute(stmt)
+    step = result.scalar_one_or_none()
+    if step is None or step.section is None:
+        return None
+
+    course_id = step.section.course_id
+
+    # Get all steps in the course ordered by section.order, step.order
+    course_stmt = (
+        select(Course)
+        .options(selectinload(Course.sections).selectinload(Section.steps))
+        .where(Course.id == course_id)
+    )
+    course_result = await db.execute(course_stmt)
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        return None
+
+    all_steps: list[Step] = []
+    for sec in course.sections:
+        for s in sec.steps:
+            all_steps.append(s)
+
+    for i, s in enumerate(all_steps):
+        if s.id == step_id and i > 0:
+            return all_steps[i - 1]
+
+    return None
 
 
 async def mark_step_complete(
@@ -14,6 +61,9 @@ async def mark_step_complete(
     step_id: UUID,
 ) -> tuple[UserProgress, int]:
     """Mark a step as completed for the given user.
+
+    Enforces **sequential locking**: the previous step must be completed
+    before this one can be marked complete (first step is exempt).
 
     If a UserProgress record already exists for this (user, step) pair
     and is_completed is True, a ValueError is raised.
@@ -27,8 +77,17 @@ async def mark_step_complete(
         A tuple of (UserProgress record, xp_reward earned).
 
     Raises:
-        ValueError: If the step is already completed by this user.
+        ValueError: If the step is already completed, or the previous
+                    step has not been completed yet.
     """
+    # Sequential lock check
+    prev_step = await _get_previous_step(db, step_id)
+    if prev_step is not None:
+        prev_progress = await _get_progress(db, user_id, prev_step.id)
+        if prev_progress is None or not prev_progress.is_completed:
+            raise ValueError(
+                f"Step '{step_id}' is locked. Complete the previous step first."
+            )
     # Check for existing completion
     existing = await _get_progress(db, user_id, step_id)
     if existing and existing.is_completed:

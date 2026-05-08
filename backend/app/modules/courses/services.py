@@ -1,10 +1,22 @@
+from copy import deepcopy
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.courses.models import Course, Section
+from app.modules.courses.models import Course, Section, Step
+
+
+def _strip_correct_option(step: Step) -> Step:
+    """Remove ``correct_option`` from a step's content_data in-place.
+
+    This prevents quiz answer keys from being leaked to the client.
+    """
+    if step.content_data and "correct_option" in step.content_data:
+        step.content_data = deepcopy(step.content_data)
+        step.content_data.pop("correct_option", None)
+    return step
 
 
 async def list_courses(db: AsyncSession) -> list[Course]:
@@ -26,12 +38,12 @@ async def get_course_with_path(
 ) -> Course | None:
     """Retrieve a single course with its sections and steps eagerly loaded.
 
-    Args:
-        db: An async database session.
-        course_id: The UUID string identifying the course.
-
     Returns:
         The Course with sections and steps populated, or None if not found.
+
+    Note:
+        ``correct_option`` is stripped from quiz step content_data to
+        prevent answer keys being leaked to the client.
     """
     stmt = (
         select(Course)
@@ -41,4 +53,8 @@ async def get_course_with_path(
         .where(Course.id == UUID(course_id))
     )
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    course = result.scalar_one_or_none()
+    if course:
+        for sec in course.sections:
+            sec.steps = [_strip_correct_option(s) for s in sec.steps]
+    return course
