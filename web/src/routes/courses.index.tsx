@@ -31,6 +31,7 @@ const LANG_META: Record<string, { gradient: string; textIcon: string }> = {
   JavaScript: { gradient: "from-yellow-400 via-amber-500 to-orange-600", textIcon: "JS" },
   SQL:        { gradient: "from-purple-500 via-pink-500 to-rose-600", textIcon: "SQL" },
   Go:         { gradient: "from-cyan-400 via-teal-500 to-emerald-600", textIcon: "GO" },
+  Rust:       { gradient: "from-orange-600 via-red-500 to-pink-600", textIcon: "RS" },
 };
 
 const NODE_COLORS = [
