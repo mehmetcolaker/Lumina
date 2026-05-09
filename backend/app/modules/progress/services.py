@@ -6,7 +6,45 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.modules.courses.models import Course, Section, Step
+from app.modules.notifications.triggers import notify_course_completed
 from app.modules.progress.models import UserProgress
+
+
+async def check_course_completion(
+    db: AsyncSession,
+    user_id: UUID,
+    course_id: UUID,
+) -> tuple[bool, int, int]:
+    """Check if a user has completed 100% of a course."""
+    from sqlalchemy import func, select
+
+    total_result = await db.execute(
+        select(func.count())
+        .select_from(Step)
+        .join(Section, Step.section_id == Section.id)
+        .where(Section.course_id == course_id)
+    )
+    total_steps = total_result.scalar() or 0
+    if total_steps == 0:
+        return False, 0, 0
+
+    subq = (
+        select(Step.id)
+        .join(Section, Step.section_id == Section.id)
+        .where(Section.course_id == course_id)
+    ).subquery()
+
+    completed_result = await db.execute(
+        select(func.count())
+        .select_from(UserProgress)
+        .where(
+            UserProgress.user_id == user_id,
+            UserProgress.step_id.in_(select(subq.c.id)),
+            UserProgress.is_completed.is_(True),
+        )
+    )
+    completed = completed_result.scalar() or 0
+    return completed >= total_steps, completed, total_steps
 
 
 async def _get_previous_step(
@@ -114,6 +152,22 @@ async def mark_step_complete(
     # Fetch the step to retrieve xp_reward
     step = await db.get(Step, step_id)
     xp_earned = step.xp_reward if step else 10
+
+    # Check if this completed the entire course -> send notification
+    from app.modules.courses.models import Section as _Section
+
+    course_id = None
+    if step and step.section:
+        s = await db.get(_Section, step.section_id)
+        if s:
+            course_id = s.course_id
+
+    if course_id:
+        is_done, _, _ = await check_course_completion(db, user_id, course_id)
+        if is_done:
+            course = await db.get(Course, course_id)
+            if course:
+                await notify_course_completed(db, user_id, course.title, course_id)
 
     return progress, xp_earned
 

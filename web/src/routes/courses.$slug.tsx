@@ -14,6 +14,7 @@ import type {
   CommentResponse,
 } from "@/lib/api-types";
 import { slugify, deriveLevel, totalCourseXp, estimateHours } from "@/lib/courses";
+import { CertificateButton } from "@/components/site/CertificateButton";
 import { Layout } from "@/components/site/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1050,12 +1051,17 @@ function CourseDetail() {
               </div>
             </div>
 
-            {/* Progress kartı */}
+            {/* Progress karti */}
             <Card className="p-6 min-w-[220px] text-center shrink-0">
               <div className="text-4xl font-bold text-primary mb-1">{progressPct}%</div>
-              <div className="text-xs text-muted-foreground mb-3">tamamlandı</div>
+              <div className="text-xs text-muted-foreground mb-3">tamamlandi</div>
               <Progress value={progressPct} className="h-2.5" />
-              <div className="mt-2.5 text-xs text-muted-foreground">{completedCount}/{allSteps.length} adım</div>
+              <div className="mt-2.5 text-xs text-muted-foreground">{completedCount}/{allSteps.length} adim</div>
+              {progressPct === 100 && courseSummary && (
+                <div className="mt-4">
+                  <CertificateButton courseId={courseSummary.id} courseTitle={course.title} />
+                </div>
+              )}
             </Card>
           </div>
         </div>

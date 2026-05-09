@@ -16,3 +16,4 @@ redis==5.2.1
 docker==7.1.0
 stripe==11.4.1
 slowapi==0.1.9
+reportlab==4.2.5

@@ -10,8 +10,8 @@ import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { slugify } from "@/lib/courses";
 import type { LearningPathResponse } from "@/lib/api-types";
-import { BookOpen, Lock, ArrowRight, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Lock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
 
 export const Route = createFileRoute("/roadmap")({
   component: RoadmapPage,
@@ -27,21 +27,34 @@ const LEVEL_COLORS = [
   { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400" },
 ];
 
+const LANG_ICONS: Record<string, string> = {
+  Python: "PY",
+  JavaScript: "JS",
+  SQL: "SQL",
+};
+
 function RoadmapPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [selectedLang, setSelectedLang] = useState<string>("Python");
   const { data: paths, isLoading } = useQuery<LearningPathResponse[]>({
     queryKey: ["paths"],
     queryFn: () => api.get<LearningPathResponse[]>("/paths/"),
   });
 
-  // For authenticated user, fetch the first path with progress
-  const pathId = paths?.[0]?.id;
+  // Group paths by language
+  const languages = useMemo(() => {
+    if (!paths) return ["Python"];
+    return [...new Set(paths.map((p) => p.language))].sort();
+  }, [paths]);
+
+  const selectedPath = paths?.find((p) => p.language === selectedLang);
+
+  // For authenticated user, fetch selected path with progress
   const { data: pathWithProgress } = useQuery<LearningPathResponse>({
-    queryKey: ["path-progress", pathId],
-    queryFn: () => api.get<LearningPathResponse>(`/paths/${pathId}`),
-    enabled: !!pathId && !!user,
+    queryKey: ["path-progress", selectedPath?.id],
+    queryFn: () => api.get<LearningPathResponse>(`/paths/${selectedPath!.id}`),
+    enabled: !!selectedPath?.id && !!user,
     refetchInterval: 10_000,
   });
 
@@ -55,7 +68,7 @@ function RoadmapPage() {
     );
   }
 
-  const path = pathWithProgress || paths?.[0];
+  const path = pathWithProgress || selectedPath;
   if (!path) {
     return (
       <Layout>
@@ -69,19 +82,48 @@ function RoadmapPage() {
 
   return (
     <Layout>
+      {/* Hero */}
       <div className="border-b border-border bg-[image:var(--gradient-hero)]">
         <div className="mx-auto max-w-5xl px-6 py-16 text-center">
           <Reveal>
-            <div className="flex items-center justify-center gap-2 text-4xl mb-4">{path.icon ?? "\uD83D\uDCCD"}</div>
-            <h1 className="text-4xl font-bold">{path.title}</h1>
-            <p className="mt-3 text-muted-foreground max-w-xl mx-auto">{path.description}</p>
+            <h1 className="text-4xl font-bold">Choose Your Path</h1>
+            <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+              Select a programming language and follow a structured learning roadmap from beginner to advanced.
+            </p>
+          </Reveal>
+
+          {/* Language selector */}
+          <Reveal delay={100}>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {languages.map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setSelectedLang(lang)}
+                  className={`px-6 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 ${
+                    selectedLang === lang
+                      ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-lg"
+                      : "bg-card border border-border text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span className="mr-2">{LANG_ICONS[lang] ?? lang.slice(0, 2).toUpperCase()}</span>
+                  {lang}
+                </button>
+              ))}
+            </div>
           </Reveal>
         </div>
       </div>
 
+      {/* Path detail */}
       <div className="mx-auto max-w-5xl px-6 py-12">
+        <div className="text-center mb-10">
+          <Reveal>
+            <h2 className="text-2xl font-bold">{path.title}</h2>
+            <p className="text-muted-foreground mt-2">{path.description}</p>
+          </Reveal>
+        </div>
+
         <div className="relative">
-          {/* Vertical timeline line */}
           <div className="absolute left-8 top-12 bottom-12 w-0.5 bg-border hidden md:block" />
 
           <div className="space-y-8">
@@ -95,8 +137,7 @@ function RoadmapPage() {
                 <Reveal key={level.id} delay={idx * 80}>
                   <div
                     className={`relative flex flex-col md:flex-row gap-6 p-6 rounded-2xl border-2 transition-all
-                      ${isUnlocked ? "bg-card hover-lift cursor-pointer" : "bg-muted/30 opacity-60 cursor-not-allowed"}
-                      ${idx === 0 ? "border-primary/40" : level.unlocked ? "border-border" : "border-border/50"}
+                      ${isUnlocked ? "bg-card hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : "bg-muted/30 opacity-60 cursor-not-allowed"}
                     `}
                     onClick={() => {
                       if (!isUnlocked) return;
@@ -104,7 +145,6 @@ function RoadmapPage() {
                       navigate({ to: `/courses/${slugify(level.course.title)}` });
                     }}
                   >
-                    {/* Level number badge */}
                     <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 ${col.border} ${col.bg}`}>
                       {progressPct >= 100 ? (
                         <CheckCircle2 className={`h-7 w-7 ${col.text}`} />
@@ -115,12 +155,9 @@ function RoadmapPage() {
                       )}
                     </div>
 
-                    {/* Level info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className={col.text}>
-                          {level.level_name}
-                        </Badge>
+                        <Badge variant="outline" className={col.text}>{level.level_name}</Badge>
                         {!isUnlocked && (
                           <Badge variant="outline" className="text-muted-foreground">
                             <Lock className="h-3 w-3 mr-1" /> {level.required_progress_pct}% required
@@ -132,11 +169,8 @@ function RoadmapPage() {
                           </Badge>
                         )}
                       </div>
-
                       <h3 className="text-xl font-bold mt-2 text-foreground">{level.course.title}</h3>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{level.course.description}</p>
-
-                      {/* Progress bar */}
                       {user && isUnlocked && (
                         <div className="mt-4 flex items-center gap-4">
                           <Progress value={progressPct} className="h-2 flex-1" />
@@ -144,8 +178,6 @@ function RoadmapPage() {
                         </div>
                       )}
                     </div>
-
-                    {/* Arrow */}
                     {isUnlocked && (
                       <div className="hidden md:flex items-center shrink-0">
                         <ArrowRight className="h-5 w-5 text-muted-foreground" />

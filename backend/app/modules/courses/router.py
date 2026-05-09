@@ -96,8 +96,9 @@ async def get_path_with_progress(
     # Map internal attrs to schema
     level_responses = []
     for level in path.levels:
-        unlocked = getattr(level, "_unlocked", False)
-        progress = getattr(level, "_progress_pct", 0)
+        cache = getattr(level, "_cache", {}) or {}
+        unlocked = cache.get("unlocked", False)
+        progress = cache.get("progress_pct", 0)
         level_responses.append(
             PathLevelResponse(
                 id=level.id,

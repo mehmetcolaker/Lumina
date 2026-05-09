@@ -6,6 +6,7 @@ from app.core.database import engine
 from app.core.middleware import register_middleware
 from app.core.redis_client import close_redis, init_redis
 from app.modules.admin.router import router as admin_router
+from app.modules.certificates.router import router as certificates_router
 from app.modules.courses.router import router as courses_router
 from app.modules.courses.router import router_path as paths_router
 from app.modules.execution.router import router as execution_router
@@ -67,6 +68,7 @@ app.include_router(gamification_router)
 app.include_router(monetization_router)
 app.include_router(notifications_router)
 app.include_router(paths_router)
+app.include_router(certificates_router)
 
 
 @app.get("/health", tags=["Health"])

@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.modules.courses.models import Step
 from app.modules.courses.services import get_course_with_path
 from app.modules.gamification.services import award_xp
+from app.modules.notifications.triggers import notify_course_completed
 from app.modules.progress import services as progress_services
 from app.modules.progress.schemas import (
     MyPathResponse,

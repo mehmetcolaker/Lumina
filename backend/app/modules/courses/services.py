@@ -72,8 +72,9 @@ async def get_path_progress(
     if path is None:
         return None
 
-    # Calculate per-level progress
-    for i, level in enumerate(path.levels):
+    # Calculate per-level progress (levels must be sorted by order)
+    sorted_levels = sorted(path.levels, key=lambda l: l.order)
+    for i, level in enumerate(sorted_levels):
         course = level.course
         if not course:
             continue
@@ -106,14 +107,17 @@ async def get_path_progress(
         completed = completed_query.scalar() or 0
 
         progress_pct = round((completed / total_steps) * 100) if total_steps > 0 else 0
-        level._progress_pct = progress_pct  # type: ignore[attr-defined]
 
-        # Unlock logic
+        # Unlock logic using a separate dict
+        level._cache = {"progress_pct": progress_pct}  # type: ignore[attr-defined]
+
         if i == 0:
-            level._unlocked = True  # type: ignore[attr-defined]
+            level._cache["unlocked"] = True  # type: ignore[attr-defined]
         else:
-            prev_level = path.levels[i - 1]
-            prev_pct = getattr(prev_level, "_progress_pct", 0)
-            level._unlocked = prev_pct >= prev_level.required_progress_pct  # type: ignore[attr-defined]
+            prev_level = sorted_levels[i - 1]
+            prev_pct = getattr(prev_level, "_cache", {}).get("progress_pct", 0)
+            level._cache["unlocked"] = (  # type: ignore[attr-defined]
+                prev_pct >= prev_level.required_progress_pct
+            )
 
     return path

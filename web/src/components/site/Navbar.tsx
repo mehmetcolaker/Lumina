@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, Menu, X, Moon, Sun, User as UserIcon, LogOut,
-  Trophy, BookOpen, LayoutDashboard, Info, Bell,
+  Trophy, BookOpen, LayoutDashboard, Info, Bell, MapIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import type { NotificationResponse } from "@/lib/api-types";
 
 const links = [
   { to: "/courses", label: "Courses", icon: BookOpen },
+  { to: "/roadmap", label: "Roadmap", icon: MapIcon },
   { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/about", label: "About", icon: Info },

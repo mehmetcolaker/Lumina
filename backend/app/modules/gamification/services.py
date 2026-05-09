@@ -16,6 +16,11 @@ from app.core.redis_client import LEADERBOARD_KEY, get_redis
 from app.modules.gamification.models import (
     BADGE_DEFINITIONS, BadgeType, LineComment, UserBadge, UserStats,
 )
+from app.modules.notifications.triggers import (
+    notify_badge_awarded,
+    notify_streak_milestone,
+    notify_xp_milestone,
+)
 from app.modules.users.models import User
 
 logger = logging.getLogger(__name__)
@@ -93,6 +98,13 @@ async def award_xp(db: AsyncSession, user_id: UUID, xp_amount: int) -> int:
 
     for badge in all_new_badges:
         logger.info("Badge awarded to user %s: %s", user_id, badge.title)
+        await notify_badge_awarded(db, user_id, badge.title, badge.emoji)
+
+    # Notify streak milestones
+    await notify_streak_milestone(db, user_id, stats.current_streak)
+
+    # Notify XP milestones
+    await notify_xp_milestone(db, user_id, stats.total_xp)
 
     return stats.total_xp
 

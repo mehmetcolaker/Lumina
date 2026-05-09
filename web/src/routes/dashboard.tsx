@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import type { CourseResponse, LeaderboardResponse, SubmissionStatusResponse } from "@/lib/api-types";
 import { progressToNextLevel, rankFromXp } from "@/lib/level";
 import { slugify } from "@/lib/courses";
-import { Zap, Flame, Trophy, BookOpen, Target, TrendingUp, History, Terminal, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Zap, Flame, Trophy, BookOpen, Target, TrendingUp, History, Terminal, CheckCircle, XCircle, Clock, MapIcon } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
@@ -182,6 +182,9 @@ function Dashboard() {
         <Reveal delay={200}>
           <div className="mt-10 flex gap-3">
             <Button asChild className="bg-[image:var(--gradient-primary)] text-primary-foreground glow-on-hover">
+              <Link to="/roadmap"><MapIcon className="mr-2 h-4 w-4" /> View Roadmap</Link>
+            </Button>
+            <Button asChild variant="outline" className="hover-scale">
               <Link to="/courses">Browse all courses</Link>
             </Button>
             <Button asChild variant="outline" className="hover-scale">
