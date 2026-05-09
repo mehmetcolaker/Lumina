@@ -25,6 +25,8 @@ def code(title, instruction, starter, solution, expected, **kw):
             "compare_mode": kw.get("mode", "contains"), "expected_output": expected,
             "hints": kw.get("hints", [])})
 
+M = "body_markdown"
+
 async def _seed(db, title, desc, lang, sections):
     if (await db.execute(select(Course).where(Course.title == title))).scalar_one_or_none():
         logger.info("  Exists: %s", title)
@@ -50,7 +52,7 @@ async def run():
             "Rust", [
             {"title":"Getting Started","order":0,"steps":[
                 t("Hello, Rust!",
-                  cd={"body_markdown":"""# Hello, Rust!
+                  cd={M:r"""# Hello, Rust!
 
 ```rust
 fn main() {
@@ -74,7 +76,7 @@ Every value in Rust has an *owner*, and there can only be one owner at a time.
 
             {"title":"Variables & Types","order":1,"steps":[
                 t("Data Types",
-                  cd={"body_markdown":"""# Data Types in Rust
+                  cd={M:r"""# Data Types in Rust
 
 ## Scalar Types
 ```rust
@@ -90,7 +92,7 @@ let is_ready: bool = true;
 
 // Character (4 bytes, Unicode)
 let letter: char = 'R';
-let emoji: char = '🦀';  // Rust's crab!
+let emoji: char = '\u{1F980}';  // Rust's crab
 ```
 
 ## Compound Types
@@ -111,7 +113,7 @@ let first = nums[0];
 
             {"title":"Ownership & Borrowing","order":2,"steps":[
                 t("Ownership",
-                  cd={"body_markdown":"""# Ownership
+                  cd={M:r"""# Ownership
 
 Three rules:
 1. Each value has an **owner**
@@ -158,7 +160,7 @@ One big restriction: you can have **either** one mutable reference **or** any nu
 
             {"title":"Functions & Control Flow","order":3,"steps":[
                 t("Functions & Loops",
-                  cd={"body_markdown":"""# Functions & Control Flow
+                  cd={M:r"""# Functions & Control Flow
 
 ## Functions
 ```rust
@@ -205,7 +207,7 @@ for i in 0..5 { println!("{}", i); }  // 0,1,2,3,4
                      [{"id":"a","label":"Bitwise OR"},{"id":"b","label":"Multiple patterns"},{"id":"c","label":"Logical OR"},{"id":"d","label":"Type cast"}],
                      "b", ["`|` lets you match multiple values", "e.g. `1 | 2 => ...`"]),
                 code("FizzBuzz", "Write a FizzBuzz function using match. Return the string representation for numbers, 'Fizz' for multiples of 3, 'Buzz' for 5, 'FizzBuzz' for both.",
-"""fn fizzbuzz(n: u32) -> String {
+r"""fn fizzbuzz(n: u32) -> String {
     match (n % 3, n % 5) {
         (0, 0) => String::from("FizzBuzz"),
         (0, _) => String::from("Fizz"),
@@ -220,7 +222,7 @@ fn main() {
     println!("{}", fizzbuzz(5));
     println!("{}", fizzbuzz(7));
 }""",
-"""fn fizzbuzz(n: u32) -> String {
+r"""fn fizzbuzz(n: u32) -> String {
     match (n % 3, n % 5) {
         (0, 0) => String::from("FizzBuzz"),
         (0, _) => String::from("Fizz"),
@@ -245,7 +247,7 @@ fn main() {
             "Rust", [
             {"title":"Structs","order":0,"steps":[
                 t("Defining Structs",
-                  cd={"body_markdown":"""# Structs
+                  cd={M:r"""# Structs
 
 ```rust
 // Named struct
@@ -284,7 +286,7 @@ fn main() {
 }
 ```"}),
                 t("Methods & impl",
-                  cd={"body_markdown":"""# Methods with impl
+                  cd={M:r"""# Methods with impl
 
 ```rust
 struct Rectangle {
@@ -317,7 +319,7 @@ fn main() {
 }
 ```"}),
                 code("Struct Area", "Define a struct Circle with radius, implement a method area() that returns f64 using 3.14159 as PI.",
-"""struct Circle {
+r"""struct Circle {
     radius: f64,
 }
 
@@ -331,7 +333,7 @@ fn main() {
     let c = Circle { radius: 5.0 };
     println!("{:.2}", c.area());
 }""",
-"""struct Circle {
+r"""struct Circle {
     radius: f64,
 }
 impl Circle {
@@ -349,7 +351,7 @@ fn main() {
 
             {"title":"Enums & Pattern Matching","order":1,"steps":[
                 t("Enums",
-                  cd={"body_markdown":"""# Enums & Pattern Matching
+                  cd={M:r"""# Enums & Pattern Matching
 
 ```rust
 enum Message {
@@ -374,7 +376,7 @@ let msg = Message::Write(String::from("hello"));
 msg.call();
 ```
 
-## Option<T> (no more null!)
+## Option\<T\> (no more null!)
 ```rust
 enum Option<T> {
     None,
@@ -391,7 +393,7 @@ match divide(10.0, 2.0) {
 }
 ```
 
-## Result<T, E>
+## Result\<T, E\>
 ```rust
 enum Result<T, E> {
     Ok(T),
@@ -409,7 +411,7 @@ fn read_file(path: &str) -> Result<String, std::io::Error> {
 
             {"title":"if let & while let","order":2,"steps":[
                 t("Concise Patterns",
-                  cd={"body_markdown":"""# if let & while let
+                  cd={M:r"""# if let & while let
 
 ```rust
 // Instead of:
@@ -447,9 +449,9 @@ while let Some(top) = stack.pop() {
             "Rust", [
             {"title":"Collections","order":0,"steps":[
                 t("Vectors & Strings",
-                  cd={"body_markdown":"""# Collections
+                  cd={M:r"""# Collections
 
-## Vec<T>
+## Vec\<T\>
 ```rust
 let mut v: Vec<i32> = Vec::new();
 v.push(1);
@@ -486,7 +488,7 @@ let greeting = format!("Hello, {}!", name);  // "Hello, Rust!"
 for c in "hello".chars() { println!("{}", c); }
 ```
 
-## HashMap<K, V>
+## HashMap\<K, V\>
 ```rust
 use std::collections::HashMap;
 
@@ -496,14 +498,14 @@ scores.insert(String::from("Red"), 50);
 
 let team = String::from("Blue");
 if let Some(score) = scores.get(&team) {
-    println!("{}: {}", team, score);
+    println!("{}: {}", score, team);
 }
 
 // Entry API
 scores.entry(String::from("Blue")).or_insert(0);
 ```"}),
                 code("HashMap Counter", "Count word frequencies in a sentence using a HashMap.",
-"""use std::collections::HashMap;
+r"""use std::collections::HashMap;
 
 fn main() {
     let text = "the cat and the dog and the bird";
@@ -516,7 +518,7 @@ fn main() {
     let result = counts.get("the").unwrap();
     println!("{}", result);
 }""",
-"""use std::collections::HashMap;
+r"""use std::collections::HashMap;
 fn main() {
     let text = "the cat and the dog and the bird";
     let mut counts: HashMap<&str, u32> = HashMap::new();
@@ -532,7 +534,7 @@ fn main() {
 
             {"title":"Error Handling","order":1,"steps":[
                 t("Result & ?",
-                  cd={"body_markdown":"""# Error Handling with Result
+                  cd={M:r"""# Error Handling with Result
 
 ```rust
 use std::fs::File;
@@ -560,7 +562,7 @@ fn read_username(path: &str) -> Result<String, io::Error> {
     Ok(username.trim().to_string())
 }
 
-// Chaining ? 
+// Chaining ?
 fn read_username_short(path: &str) -> Result<String, io::Error> {
     let mut username = String::new();
     File::open(path)?.read_to_string(&mut username)?;
@@ -590,8 +592,8 @@ let doubled = opt.map(|x| x * 2);  // Some(10)
                 quiz("? Operator Quiz", "When does the ? operator return early?",
                      [{"id":"a","label":"When the value is Ok"},{"id":"b","label":"When the value is Err"},{"id":"c","label":"Both cases"},{"id":"d","label":"Never"}],
                      "b", ["? propagates errors", "It unwraps Ok or returns Err from the function"]),
-                code("Safe Division", "Write a function safe_divide(a, b) -> Result<f64, String> that returns Err if b is 0. Use the ? operator in main to call it and print the result.",
-"""fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
+                code("Safe Division", "Write a function safe_divide(a, b) -> Result<f64, String> that returns Err if b is 0. Use the ? operator in main to call it.",
+r"""fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
     if b == 0.0 {
         Err(String::from("division by zero"))
     } else {
@@ -604,7 +606,7 @@ fn main() -> Result<(), String> {
     println!("{:.1}", result);
     Ok(())
 }""",
-"""fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
+r"""fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
     if b == 0.0 {
         Err(String::from("division by zero"))
     } else {
@@ -627,7 +629,7 @@ fn main() -> Result<(), String> {
             "Rust", [
             {"title":"Generics & Traits","order":0,"steps":[
                 t("Generics",
-                  cd={"body_markdown":"""# Generics & Traits
+                  cd={M:r"""# Generics & Traits
 
 ```rust
 // Generic function
@@ -696,7 +698,7 @@ fn compare<T: Summary + Clone>(a: &T, b: &T) {}
 
             {"title":"Lifetimes","order":1,"steps":[
                 t("Lifetimes",
-                  cd={"body_markdown":"""# Lifetimes
+                  cd={M:r"""# Lifetimes
 
 Lifetimes ensure references are valid as long as they're used.
 
@@ -738,7 +740,7 @@ struct Excerpt<'a> {
 
             {"title":"Closures & Iterators","order":2,"steps":[
                 t("Closures & Iterators",
-                  cd={"body_markdown":"""# Closures & Iterators
+                  cd={M:r"""# Closures & Iterators
 
 ## Closures (anonymous functions)
 ```rust
@@ -785,8 +787,8 @@ let result: Vec<i32> = (1..=10)
     .collect();
 println!("{:?}", result);  // [20, 40, 60, 80, 100]
 ```"}),
-                code("Iterator Chain", "Use iterators to: filter numbers > 5, double them, collect into a Vec. Start with vec![1, 3, 7, 2, 9, 4, 11].",
-"""fn main() {
+                code("Iterator Chain", "Use iterators to: filter numbers > 5, double them, collect into a Vec.",
+r"""fn main() {
     let nums = vec![1, 3, 7, 2, 9, 4, 11];
     let result: Vec<i32> = nums
         .iter()
@@ -795,7 +797,7 @@ println!("{:?}", result);  // [20, 40, 60, 80, 100]
         .collect();
     println!("{:?}", result);
 }""",
-"""fn main() {
+r"""fn main() {
     let nums = vec![1, 3, 7, 2, 9, 4, 11];
     let result: Vec<i32> = nums
         .iter()
@@ -809,13 +811,13 @@ println!("{:?}", result);  // [20, 40, 60, 80, 100]
             ]},
         ])
 
-        # ── Course 5: Rust Memory & Concurrency ──
+        # ── Course 5: Rust Concurrency & Memory ──
         concurrency = await _seed(db, "Rust Concurrency & Memory",
             "Threads, channels, Arc/Mutex, Send/Sync traits, and async/await fundamentals.",
             "Rust", [
             {"title":"Threads","order":0,"steps":[
                 t("Threads & Channels",
-                  cd={"body_markdown":"""# Threads & Channels
+                  cd={M:r"""# Threads & Channels
 
 ```rust
 use std::thread;
@@ -857,7 +859,7 @@ for received in rx {
 }
 ```"}),
                 t("Arc & Mutex",
-                  cd={"body_markdown":"""# Arc & Mutex (Shared State)
+                  cd={M:r"""# Arc & Mutex (Shared State)
 
 ## Mutex
 ```rust
@@ -896,12 +898,11 @@ println!("Result: {}", *counter.lock().unwrap());  // 10
 
 ## Send & Sync Traits
 - **Send**: Types that can be transferred across threads
-- **Sync**: Types that can be shared across threads (shared reference)
+- **Sync**: Types that can be shared via reference across threads
 - Most types are Send + Sync automatically
 - Raw pointers are neither
-```rust
-// Rc<T> is not Send (single-threaded ref count)
-// Arc<T> is Send + Sync (atomic ref count)
+- Rc\<T\> is not Send (single-threaded ref count)
+- Arc\<T\> is Send + Sync (atomic ref count)
 ```"}),
                 quiz("Arc vs Rc", "What's the difference between Rc and Arc?",
                      [{"id":"a","label":"Arc is for async, Rc for sync"},{"id":"b","label":"Arc uses atomic counting, Rc doesn't"},{"id":"c","label":"Rc is faster but not thread-safe"},{"id":"d","label":"Both B and C"}],
@@ -910,7 +911,7 @@ println!("Result: {}", *counter.lock().unwrap());  // 10
 
             {"title":"Async/Await","order":1,"steps":[
                 t("Async Basics",
-                  cd={"body_markdown":"""# Async/Await in Rust
+                  cd={M:r"""# Async/Await in Rust
 
 ```rust
 use tokio;  // or async-std
@@ -923,7 +924,7 @@ async fn main() {
 
 async fn fetch_data() -> String {
     // Simulate network call
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    thread::sleep(std::time::Duration::from_secs(1));
     String::from("Data fetched!")
 }
 
@@ -944,14 +945,14 @@ async fn main() {
 - **Future**: A value that may not be ready yet
 - **await**: Pauses current function until Future completes
 - **Runtime**: Executor that polls Futures (e.g., tokio, async-std)
-- Not zero-cost like goroutines (Rust's model is explicit)
+- Unlike goroutines, Rust's async is zero-cost (no pre-allocated stack)
 """})]},
 
             {"title":"Smart Pointers","order":2,"steps":[
                 t("Box, Rc, RefCell",
-                  cd={"body_markdown":"""# Smart Pointers
+                  cd={M:r"""# Smart Pointers
 
-## Box<T> - Heap allocation
+## Box\<T\> - Heap allocation
 ```rust
 // Recursive types need Box
 enum List {
@@ -961,6 +962,7 @@ enum List {
 
 let list = Cons(1, Box::new(Cons(2, Box::new(Nil))));
 ```
+
 ```rust
 // Trait objects
 trait Animal { fn speak(&self); }
@@ -971,7 +973,7 @@ let animal: Box<dyn Animal> = Box::new(Dog);
 animal.speak();
 ```
 
-## Rc<T> - Reference Counted (single-threaded)
+## Rc\<T\> - Reference Counted (single-threaded)
 ```rust
 use std::rc::Rc;
 
@@ -980,7 +982,7 @@ let b = Rc::clone(&a);  // increments reference count
 println!("count: {}", Rc::strong_count(&a));  // 2
 ```
 
-## RefCell<T> - Interior Mutability
+## RefCell\<T\> - Interior Mutability
 ```rust
 use std::cell::RefCell;
 
@@ -1013,7 +1015,7 @@ struct Node {
             "Rust", [
             {"title":"Testing","order":0,"steps":[
                 t("Unit & Integration Tests",
-                  cd={"body_markdown":"""# Testing in Rust
+                  cd={M:r"""# Testing in Rust
 
 ## Unit Tests (in the same file)
 ```rust
@@ -1069,8 +1071,8 @@ pub fn add(a: i32, b: i32) -> i32 { a + b }
 Run: `cargo test`
 Doc tests: `cargo test --doc`
 ```"}),
-                code("Write a Test", "Write a function is_even and a test for it. The test file structure is already set up.",
-"""pub fn is_even(n: i32) -> bool {
+                code("Write a Test", "Write a function is_even and a test for it.",
+r"""pub fn is_even(n: i32) -> bool {
     n % 2 == 0
 }
 
@@ -1092,7 +1094,7 @@ mod tests {
         assert!(!is_even(7));
     }
 }""",
-"""pub fn is_even(n: i32) -> bool { n % 2 == 0 }
+r"""pub fn is_even(n: i32) -> bool { n % 2 == 0 }
 fn main() { println!("{}", is_even(4)); }
 #[cfg(test)]
 mod tests {
@@ -1106,7 +1108,7 @@ mod tests {
 
             {"title":"Modules & Crates","order":1,"steps":[
                 t("Module System",
-                  cd={"body_markdown":"""# Modules & Crates
+                  cd={M:r"""# Modules & Crates
 
 ```rust
 // src/lib.rs
@@ -1161,7 +1163,7 @@ tokio = { version = "1.0", features = ["full"] }
             "Rust", [
             {"title":"File & Environment","order":0,"steps":[
                 t("File I/O & Environment",
-                  cd={"body_markdown":"""# File I/O & Environment
+                  cd={M:r"""# File I/O & Environment
 
 ## Reading & Writing Files
 ```rust
@@ -1181,7 +1183,7 @@ let bytes = fs::read("image.png").unwrap();
 
 // Create and write
 let mut file = fs::File::create("log.txt")?;
-file.write_all(b"Log entry 1\\n")?;
+file.write_all(b"Log entry 1\n")?;
 ```
 
 ## Environment & Args
@@ -1203,8 +1205,8 @@ env::set_var("MY_VAR", "value");
 let cwd = env::current_dir().unwrap();
 println!("Working dir: {}", cwd.display());
 ```"}),
-                code("File Line Count", "Write a program that reads a file and prints the number of lines. Use env::args() for the filename. If no filename, print '0'.",
-"""use std::env;
+                code("File Line Count", "Read filename from args, print line count. If no filename, print '0'.",
+r"""use std::env;
 use std::fs;
 
 fn main() {
@@ -1217,7 +1219,7 @@ fn main() {
     let lines = content.lines().count();
     println!("{}", lines);
 }""",
-"""use std::env;
+r"""use std::env;
 use std::fs;
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -1232,7 +1234,7 @@ fn main() {
 
             {"title":"Serialization","order":1,"steps":[
                 t("Serde",
-                  cd={"body_markdown":"""# Serialization with Serde
+                  cd={M:r"""# Serialization with Serde
 
 ```rust
 use serde::{Serialize, Deserialize};
