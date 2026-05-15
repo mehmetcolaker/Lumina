@@ -26,5 +26,10 @@ export function progressToNextLevel(xp: number) {
   const lvl = levelFromXp(xp);
   const cur = xpForLevel(lvl);
   const next = xpForLevel(lvl + 1);
-  return { level: lvl, current: xp - cur, needed: next - cur, percent: Math.min(100, ((xp - cur) / (next - cur)) * 100) };
+  return {
+    level: lvl,
+    current: xp - cur,
+    needed: next - cur,
+    percent: Math.min(100, ((xp - cur) / (next - cur)) * 100),
+  };
 }

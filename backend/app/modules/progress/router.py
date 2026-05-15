@@ -76,7 +76,7 @@ async def answer_quiz(
     else:
         return QuizAnswerResponse(
             is_correct=False,
-            correct_option=correct_option,
+            correct_option=None,
             explanation=explanation,
             xp_earned=0,
         )
@@ -106,6 +106,24 @@ async def complete_step(
 
     user_uuid = current_user.id
     step_uuid = UUID(step_id)
+
+    step = await db.get(Step, step_uuid)
+    if step is None:
+        raise HTTPException(status_code=404, detail="Step not found.")
+    if step.step_type.value == "quiz":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quiz steps must be completed by submitting the correct answer.",
+        )
+    if step.step_type.value == "code":
+        has_pass = await progress_services.has_successful_submission(
+            db, user_uuid, step_uuid
+        )
+        if not has_pass:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Code steps require a passing submission before completion.",
+            )
 
     try:
         progress, xp = await progress_services.mark_step_complete(

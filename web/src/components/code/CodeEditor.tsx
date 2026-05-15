@@ -14,9 +14,21 @@
 
 import { useEffect, useRef } from "react";
 import { EditorState } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection } from "@codemirror/view";
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  drawSelection,
+} from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { bracketMatching, syntaxHighlighting, defaultHighlightStyle, indentOnInput } from "@codemirror/language";
+import {
+  bracketMatching,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  indentOnInput,
+} from "@codemirror/language";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { python } from "@codemirror/lang-python";
 import { javascript } from "@codemirror/lang-javascript";
@@ -119,8 +131,7 @@ export function CodeEditor({
 
   // Detect dark mode from <html> class
   const isDark =
-    typeof document !== "undefined" &&
-    document.documentElement.classList.contains("dark");
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -152,12 +163,7 @@ export function CodeEditor({
       indentOnInput(),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       history(),
-      keymap.of([
-        ...defaultKeymap,
-        ...historyKeymap,
-        ...closeBracketsKeymap,
-        indentWithTab,
-      ]),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...closeBracketsKeymap, indentWithTab]),
       langExt,
       updateListener,
       EditorView.lineWrapping,
@@ -220,11 +226,5 @@ export function CodeEditor({
     }
   }, [value]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="code-editor-container"
-      style={{ minHeight }}
-    />
-  );
+  return <div ref={containerRef} className="code-editor-container" style={{ minHeight }} />;
 }

@@ -45,7 +45,6 @@ const AuthContext = createContext<AuthContextValue>({
   refresh: async () => null,
 });
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,19 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
-  const signIn = useCallback(
-    async (email: string, password: string): Promise<UserResponse> => {
-      const token = await api.postForm<TokenResponse>("/auth/login", {
-        username: email,
-        password,
-      });
-      tokenStorage.set(token.access_token);
-      const me = await api.get<UserResponse>("/users/me");
-      setUser(me);
-      return me;
-    },
-    [],
-  );
+  const signIn = useCallback(async (email: string, password: string): Promise<UserResponse> => {
+    const token = await api.postForm<TokenResponse>("/auth/login", {
+      username: email,
+      password,
+    });
+    tokenStorage.set(token.access_token);
+    const me = await api.get<UserResponse>("/users/me");
+    setUser(me);
+    return me;
+  }, []);
 
   const signUp = useCallback(
     async (email: string, password: string): Promise<UserResponse> => {
@@ -120,6 +116,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
 
 export const useAuth = (): AuthContextValue => useContext(AuthContext);

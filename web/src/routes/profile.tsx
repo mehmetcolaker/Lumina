@@ -8,8 +8,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import type { SubmissionStatusResponse, UserBadgesResponse } from "@/lib/api-types";
 import {
-  LogOut, Mail, Star, ShieldCheck, Terminal, History,
-  CheckCircle, XCircle, Clock, Award,
+  LogOut,
+  Mail,
+  Star,
+  ShieldCheck,
+  Terminal,
+  History,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,7 +41,9 @@ function ProfilePage() {
     if (!user) return;
     (async () => {
       try {
-        const data = await api.get<SubmissionStatusResponse[]>("/execution/all-submissions?limit=30");
+        const data = await api.get<SubmissionStatusResponse[]>(
+          "/execution/all-submissions?limit=30",
+        );
         setSubmissions(data);
       } catch {
         // empty
@@ -45,7 +55,9 @@ function ProfilePage() {
       try {
         const b = await api.get<UserBadgesResponse>("/gamification/badges");
         setBadges(b);
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
     })();
   }, [user]);
 
@@ -56,7 +68,11 @@ function ProfilePage() {
   };
 
   if (authLoading) {
-    return <Layout><div className="p-12 text-center text-muted-foreground">Loading…</div></Layout>;
+    return (
+      <Layout>
+        <div className="p-12 text-center text-muted-foreground">Loading…</div>
+      </Layout>
+    );
   }
   if (!user) return null;
 
@@ -73,7 +89,9 @@ function ProfilePage() {
               {user.email.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="text-lg font-semibold text-foreground">{user.email.split("@")[0]}</div>
+              <div className="text-lg font-semibold text-foreground">
+                {user.email.split("@")[0]}
+              </div>
               <div className="text-sm text-muted-foreground flex items-center gap-1">
                 <Mail className="h-3 w-3" /> {user.email}
               </div>
@@ -94,8 +112,14 @@ function ProfilePage() {
                 <Star className="h-4 w-4 text-amber-500" />
                 <span className="text-sm text-muted-foreground">Subscription</span>
               </div>
-              <Badge className={user.is_premium ? "bg-[image:var(--gradient-primary)] text-primary-foreground" : ""}
-                variant={user.is_premium ? "default" : "outline"}>
+              <Badge
+                className={
+                  user.is_premium
+                    ? "bg-[image:var(--gradient-primary)] text-primary-foreground"
+                    : ""
+                }
+                variant={user.is_premium ? "default" : "outline"}
+              >
                 {user.is_premium ? "Premium" : "Free"}
               </Badge>
             </div>
@@ -127,18 +151,24 @@ function ProfilePage() {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {badges.owned.map((b) => (
-                  <div key={b.badge_type}
+                  <div
+                    key={b.badge_type}
                     className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 px-3 py-2 text-sm"
-                    title={b.description ?? ""}>
+                    title={b.description ?? ""}
+                  >
                     <span className="text-lg">{getEmoji(b.emoji)}</span>
-                    <span className="font-medium text-amber-700 dark:text-amber-300">{b.title}</span>
+                    <span className="font-medium text-amber-700 dark:text-amber-300">
+                      {b.title}
+                    </span>
                   </div>
                 ))}
                 {/* Locked badges dimmed */}
                 {badges.locked.slice(0, 6).map((b) => (
-                  <div key={b.badge_type}
+                  <div
+                    key={b.badge_type}
                     className="flex items-center gap-2 rounded-xl bg-muted/30 border border-border px-3 py-2 text-sm opacity-40"
-                    title={b.description ?? ""}>
+                    title={b.description ?? ""}
+                  >
                     <span className="text-lg">?</span>
                     <span className="text-muted-foreground">{b.title}</span>
                   </div>
@@ -165,7 +195,9 @@ function ProfilePage() {
             <History className="h-5 w-5 text-primary" /> Kod Denemeleri
           </h2>
           <Card className="overflow-hidden">
-            {loadingSubs && <div className="p-6 text-center text-sm text-muted-foreground">Yukleniyor...</div>}
+            {loadingSubs && (
+              <div className="p-6 text-center text-sm text-muted-foreground">Yukleniyor...</div>
+            )}
             {!loadingSubs && submissions.length === 0 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 Henuz kod denemen yok.
@@ -175,7 +207,9 @@ function ProfilePage() {
               <div className="divide-y divide-border">
                 {submissions.map((s) => (
                   <div key={s.submission_id} className="p-4 hover:bg-accent/40 transition-colors">
-                    <div className="flex items-center gap-3">...</div></div>))}
+                    <div className="flex items-center gap-3">...</div>
+                  </div>
+                ))}
               </div>
             )}
           </Card>
@@ -187,11 +221,18 @@ function ProfilePage() {
 
 function getEmoji(key: string): string {
   const map: Record<string, string> = {
-    star: "\u2B50", flame: "\uD83D\uDD25", crown: "\uD83D\uDC51",
-    zap: "\u26A1", gem: "\uD83D\uDC8E", trophy: "\uD83C\uDFC6",
-    target: "\uD83C\uDFAF", "graduation-cap": "\uD83C\uDF93",
-    snake: "\uD83D\uDC0D", database: "\uD83D\uDCC1",
-    code: "\uD83D\uDCBB", brain: "\uD83E\uDDE0",
+    star: "\u2B50",
+    flame: "\uD83D\uDD25",
+    crown: "\uD83D\uDC51",
+    zap: "\u26A1",
+    gem: "\uD83D\uDC8E",
+    trophy: "\uD83C\uDFC6",
+    target: "\uD83C\uDFAF",
+    "graduation-cap": "\uD83C\uDF93",
+    snake: "\uD83D\uDC0D",
+    database: "\uD83D\uDCC1",
+    code: "\uD83D\uDCBB",
+    brain: "\uD83E\uDDE0",
     rocket: "\uD83D\uDE80",
   };
   return map[key] ?? "\uD83C\uDFC5";

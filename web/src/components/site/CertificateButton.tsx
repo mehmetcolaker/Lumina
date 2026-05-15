@@ -26,10 +26,9 @@ export function CertificateButton({ courseId, courseTitle }: Props) {
         toast.error("Please sign in first.");
         return;
       }
-      const response = await fetch(
-        `${API_URL}/certificates/${courseId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await fetch(`${API_URL}/certificates/${courseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -53,12 +52,7 @@ export function CertificateButton({ courseId, courseTitle }: Props) {
   };
 
   return (
-    <Button
-      onClick={download}
-      disabled={loading}
-      variant="outline"
-      className="hover-scale"
-    >
+    <Button onClick={download} disabled={loading} variant="outline" className="hover-scale">
       {loading ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (

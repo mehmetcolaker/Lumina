@@ -26,8 +26,7 @@ export const Route = createFileRoute("/leaderboard")({
 function Leaderboard() {
   const { data, isLoading, isError } = useQuery<LeaderboardResponse>({
     queryKey: ["leaderboard"],
-    queryFn: () =>
-      api.get<LeaderboardResponse>("/gamification/leaderboard?limit=50"),
+    queryFn: () => api.get<LeaderboardResponse>("/gamification/leaderboard?limit=50"),
     refetchInterval: 30_000, // refresh every 30 s
   });
 
@@ -62,16 +61,12 @@ function Leaderboard() {
           <div className="mb-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {RANKS.map((r, i) => (
               <Reveal key={r.name} delay={i * 60}>
-                <Card
-                  className={`p-4 hover-lift bg-gradient-to-br ${r.color} text-white border-0`}
-                >
+                <Card className={`p-4 hover-lift bg-gradient-to-br ${r.color} text-white border-0`}>
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{r.emoji}</span>
                     <div>
                       <div className="font-bold text-lg">{r.name}</div>
-                      <div className="text-xs opacity-90">
-                        {r.min.toLocaleString()}+ XP
-                      </div>
+                      <div className="text-xs opacity-90">{r.min.toLocaleString()}+ XP</div>
                     </div>
                   </div>
                 </Card>
@@ -91,11 +86,7 @@ function Leaderboard() {
                 <Crown className="h-7 w-7" />,
                 <Medal className="h-6 w-6" />,
               ];
-              const iconColors = [
-                "text-slate-400",
-                "text-amber-400",
-                "text-orange-400",
-              ];
+              const iconColors = ["text-slate-400", "text-amber-400", "text-orange-400"];
               const pos = [2, 1, 3];
               const arrIdx = idx === 1 ? 0 : idx === 0 ? 1 : 2;
               const initial = r.email.charAt(0).toUpperCase();
@@ -131,9 +122,7 @@ function Leaderboard() {
 
         <Card className="overflow-hidden">
           <div className="divide-y divide-border">
-            {isLoading && (
-              <div className="p-8 text-center text-muted-foreground">Loading…</div>
-            )}
+            {isLoading && <div className="p-8 text-center text-muted-foreground">Loading…</div>}
             {isError && (
               <div className="p-8 text-center text-destructive">
                 Could not load the leaderboard.
@@ -150,23 +139,15 @@ function Leaderboard() {
               return (
                 <Reveal key={r.user_id} delay={i * 30}>
                   <div className="flex items-center gap-4 p-4 transition-all hover:bg-accent/40 hover:translate-x-1">
-                    <div className="w-8 text-center font-bold text-muted-foreground">
-                      {r.rank}
-                    </div>
+                    <div className="w-8 text-center font-bold text-muted-foreground">{r.rank}</div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-sm font-bold text-primary-foreground">
                       {initial}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold truncate">
-                        {r.email.split("@")[0]}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {r.email}
-                      </div>
+                      <div className="font-semibold truncate">{r.email.split("@")[0]}</div>
+                      <div className="text-xs text-muted-foreground truncate">{r.email}</div>
                     </div>
-                    <Badge
-                      className={`bg-gradient-to-r ${rank.color} text-white border-0`}
-                    >
+                    <Badge className={`bg-gradient-to-r ${rank.color} text-white border-0`}>
                       {rank.emoji} {rank.name}
                     </Badge>
                     <div className="flex items-center gap-1 font-bold text-primary">

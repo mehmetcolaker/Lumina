@@ -8,10 +8,27 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
-import type { CourseResponse, LeaderboardResponse, SubmissionStatusResponse } from "@/lib/api-types";
+import type {
+  CourseResponse,
+  LeaderboardResponse,
+  SubmissionStatusResponse,
+} from "@/lib/api-types";
 import { progressToNextLevel, rankFromXp } from "@/lib/level";
 import { slugify } from "@/lib/courses";
-import { Zap, Flame, Trophy, BookOpen, Target, TrendingUp, History, Terminal, CheckCircle, XCircle, Clock, MapIcon } from "lucide-react";
+import {
+  Zap,
+  Flame,
+  Trophy,
+  BookOpen,
+  Target,
+  TrendingUp,
+  History,
+  Terminal,
+  CheckCircle,
+  XCircle,
+  Clock,
+  MapIcon,
+} from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
@@ -79,9 +96,7 @@ function Dashboard() {
             <Card className="mt-8 p-6 hover-lift">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <Badge
-                    className={`bg-gradient-to-r ${rank.color} text-white border-0 text-sm`}
-                  >
+                  <Badge className={`bg-gradient-to-r ${rank.color} text-white border-0 text-sm`}>
                     {rank.emoji} {rank.name}
                   </Badge>
                   <div className="mt-2 text-3xl font-bold">Level {prog.level}</div>
@@ -181,8 +196,13 @@ function Dashboard() {
 
         <Reveal delay={200}>
           <div className="mt-10 flex gap-3">
-            <Button asChild className="bg-[image:var(--gradient-primary)] text-primary-foreground glow-on-hover">
-              <Link to="/roadmap"><MapIcon className="mr-2 h-4 w-4" /> View Roadmap</Link>
+            <Button
+              asChild
+              className="bg-[image:var(--gradient-primary)] text-primary-foreground glow-on-hover"
+            >
+              <Link to="/roadmap">
+                <MapIcon className="mr-2 h-4 w-4" /> View Roadmap
+              </Link>
             </Button>
             <Button asChild variant="outline" className="hover-scale">
               <Link to="/courses">Browse all courses</Link>
@@ -206,14 +226,22 @@ function Dashboard() {
             {recentSubs.slice(0, 5).map((s, i) => (
               <Reveal key={s.submission_id} delay={i * 50}>
                 <div className="flex items-center gap-3 p-4 hover:bg-accent/40 transition-colors">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    s.verdict === "pass" ? "bg-emerald-500/10 text-emerald-400"
-                      : s.verdict === "wrong_answer" ? "bg-red-500/10 text-red-400"
-                      : "bg-zinc-500/10 text-zinc-400"
-                  }`}>
-                    {s.verdict === "pass" ? <CheckCircle className="h-4 w-4" />
-                      : s.verdict === "wrong_answer" ? <XCircle className="h-4 w-4" />
-                      : <Terminal className="h-4 w-4" />}
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                      s.verdict === "pass"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : s.verdict === "wrong_answer"
+                          ? "bg-red-500/10 text-red-400"
+                          : "bg-zinc-500/10 text-zinc-400"
+                    }`}
+                  >
+                    {s.verdict === "pass" ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : s.verdict === "wrong_answer" ? (
+                      <XCircle className="h-4 w-4" />
+                    ) : (
+                      <Terminal className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -226,7 +254,9 @@ function Dashboard() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">{s.code?.slice(0, 80)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">
+                      {s.code?.slice(0, 80)}
+                    </p>
                   </div>
                   {s.created_at && (
                     <span className="text-xs text-muted-foreground shrink-0">

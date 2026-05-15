@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 # Map of human-readable language -> Docker image + entry-point
 _SUPPORTED_IMAGES: dict[str, tuple[str, list[str]]] = {
-    "python": ("python:3.11-alpine", ["python", "-c"]),
-    "javascript": ("node:20-alpine", ["node", "-e"]),
+    "python": ("python:3.14-alpine", ["python", "-c"]),
+    "javascript": ("node:24-alpine", ["node", "-e"]),
     "bash": ("alpine:latest", ["sh", "-c"]),
 }
 
@@ -90,7 +90,6 @@ def _capture_python_stdout_stderr(code: str, timeout_s: int = 3) -> tuple[str, s
             "iter": iter,
             "next": next,
             "input": input,
-            "open": open,
             "ord": ord,
             "chr": chr,
             "hex": hex,
@@ -185,7 +184,7 @@ def _run_python_code(code: str) -> tuple[str, str, int, float, bool]:
     """Execute Python code via Docker or fallback in-process sandbox."""
     if _DOCKER_AVAILABLE:
         try:
-            return _run_container("python:3.11-alpine", ["python", "-c", code])
+            return _run_container("python:3.14-alpine", ["python", "-c", code])
         except Exception as exc:
             logger.warning("Docker unavailable, falling back to in-process: %s", exc)
 
@@ -198,7 +197,7 @@ def _run_javascript_code(code: str) -> tuple[str, str, int, float, bool]:
     if not _DOCKER_AVAILABLE:
         raise RuntimeError("JavaScript execution requires Docker.")
     try:
-        return _run_container("node:20-alpine", ["node", "-e", code])
+        return _run_container("node:24-alpine", ["node", "-e", code])
     except Exception as exc:
         raise RuntimeError(f"JavaScript execution failed: {exc}") from exc
 
@@ -319,6 +318,11 @@ _LANGUAGE_RUNNERS = {
     "sql": _run_sql_code,
     "bash": lambda code: _run_container("alpine:latest", ["sh", "-c", code]),
 }
+
+
+def supported_languages() -> set[str]:
+    """Return language identifiers that the sandbox can execute."""
+    return set(_LANGUAGE_RUNNERS)
 
 
 def run_code_in_sandbox(code: str, language: str) -> dict:

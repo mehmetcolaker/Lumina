@@ -23,10 +23,26 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useState, useCallback } from "react";
 import {
-  ArrowLeft, ArrowRight, BookOpen, CheckCircle2, CheckCircle, Clock,
-  Code2, HelpCircle, PlayCircle, Trophy, Zap, ChevronRight,
-  Lock, AlertCircle, RotateCcw, Terminal, Loader2, History,
-  MessageSquare, Send,
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  CheckCircle,
+  Clock,
+  Code2,
+  HelpCircle,
+  PlayCircle,
+  Trophy,
+  Zap,
+  ChevronRight,
+  Lock,
+  AlertCircle,
+  RotateCcw,
+  Terminal,
+  Loader2,
+  History,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { connectExecutionWS } from "@/lib/ws";
 import { tokenStorage } from "@/lib/api";
@@ -41,13 +57,36 @@ export const Route = createFileRoute("/courses/$slug")({
 // Constants
 // ─────────────────────────────────────────────────────
 
-const STEP_META: Record<string, { icon: typeof BookOpen; label: string; color: string; bg: string; border: string }> = {
-  theory: { icon: BookOpen,   label: "Teori",     color: "text-blue-500",    bg: "bg-blue-500/10",    border: "border-blue-500/30" },
-  quiz:   { icon: HelpCircle, label: "Quiz",      color: "text-amber-500",   bg: "bg-amber-500/10",   border: "border-amber-500/30" },
-  code:   { icon: Code2,      label: "Kod Yaz",   color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+const STEP_META: Record<
+  string,
+  { icon: typeof BookOpen; label: string; color: string; bg: string; border: string }
+> = {
+  theory: {
+    icon: BookOpen,
+    label: "Teori",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+  },
+  quiz: {
+    icon: HelpCircle,
+    label: "Quiz",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/30",
+  },
+  code: {
+    icon: Code2,
+    label: "Kod Yaz",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+  },
 };
 
-const FREE_STEPS = 2; // Giriş yapmadan açık olan adım sayısı
+const FREE_STEPS = 3;
+const FREE_PREVIEW_TYPES = new Set(["theory", "quiz", "code"]);
+const SUPPORTED_RUNTIMES = new Set(["python", "javascript", "js", "sql", "bash"]);
 
 // ─────────────────────────────────────────────────────
 // Theory renderer
@@ -76,8 +115,11 @@ function TheoryStep({ step }: { step: StepResponse }) {
       }
       continue;
     }
-    if (inCode) { codeBuf += line + "\n"; }
-    else { buf += line + "\n"; }
+    if (inCode) {
+      codeBuf += line + "\n";
+    } else {
+      buf += line + "\n";
+    }
   }
   if (buf.trim()) segments.push({ type: "text", content: buf });
 
@@ -85,26 +127,62 @@ function TheoryStep({ step }: { step: StepResponse }) {
     const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
     return parts.map((p, i) => {
       if (p.startsWith("`") && p.endsWith("`"))
-        return <code key={i} className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-primary">{p.slice(1,-1)}</code>;
+        return (
+          <code key={i} className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-primary">
+            {p.slice(1, -1)}
+          </code>
+        );
       if (p.startsWith("**") && p.endsWith("**"))
-        return <strong key={i} className="font-semibold">{p.slice(2,-2)}</strong>;
+        return (
+          <strong key={i} className="font-semibold">
+            {p.slice(2, -2)}
+          </strong>
+        );
       return p;
     });
   };
 
   const renderLine = (line: string, i: number) => {
-    if (line.startsWith("# "))   return <h1 key={i} className="text-2xl font-bold mt-6 mb-3 text-foreground">{inline(line.slice(2))}</h1>;
-    if (line.startsWith("## "))  return <h2 key={i} className="text-xl font-bold mt-5 mb-2 text-foreground">{inline(line.slice(3))}</h2>;
-    if (line.startsWith("### ")) return <h3 key={i} className="text-lg font-semibold mt-4 mb-1 text-foreground">{inline(line.slice(4))}</h3>;
-    if (line.startsWith("- "))   return <li key={i} className="ml-6 list-disc text-sm leading-7 text-muted-foreground">{inline(line.slice(2))}</li>;
-    if (line.startsWith("> "))   return (
-      <blockquote key={i} className="my-3 border-l-4 border-primary/50 pl-4 italic text-muted-foreground bg-primary/5 py-2 rounded-r-lg">
-        {inline(line.slice(2))}
-      </blockquote>
+    if (line.startsWith("# "))
+      return (
+        <h1 key={i} className="text-2xl font-bold mt-6 mb-3 text-foreground">
+          {inline(line.slice(2))}
+        </h1>
+      );
+    if (line.startsWith("## "))
+      return (
+        <h2 key={i} className="text-xl font-bold mt-5 mb-2 text-foreground">
+          {inline(line.slice(3))}
+        </h2>
+      );
+    if (line.startsWith("### "))
+      return (
+        <h3 key={i} className="text-lg font-semibold mt-4 mb-1 text-foreground">
+          {inline(line.slice(4))}
+        </h3>
+      );
+    if (line.startsWith("- "))
+      return (
+        <li key={i} className="ml-6 list-disc text-sm leading-7 text-muted-foreground">
+          {inline(line.slice(2))}
+        </li>
+      );
+    if (line.startsWith("> "))
+      return (
+        <blockquote
+          key={i}
+          className="my-3 border-l-4 border-primary/50 pl-4 italic text-muted-foreground bg-primary/5 py-2 rounded-r-lg"
+        >
+          {inline(line.slice(2))}
+        </blockquote>
+      );
+    if (line.startsWith("| ")) return null;
+    if (line === "") return <div key={i} className="h-3" />;
+    return (
+      <p key={i} className="text-sm leading-7 text-foreground">
+        {inline(line)}
+      </p>
     );
-    if (line.startsWith("| "))   return null;
-    if (line === "")             return <div key={i} className="h-3" />;
-    return <p key={i} className="text-sm leading-7 text-foreground">{inline(line)}</p>;
   };
 
   return (
@@ -121,34 +199,139 @@ function TheoryStep({ step }: { step: StepResponse }) {
               <span className="ml-2 text-xs text-zinc-400 font-mono">{seg.lang}</span>
             </div>
             <pre className="bg-[#0d1117] p-5 overflow-x-auto text-sm font-mono leading-6">
-              {seg.content.trimEnd().split("\n").map((line, li) => (
-                <SyntaxLine key={li} line={line} lang={seg.lang ?? "python"} />
-              ))}
+              {seg.content
+                .trimEnd()
+                .split("\n")
+                .map((line, li) => (
+                  <SyntaxLine key={li} line={line} lang={seg.lang ?? "python"} />
+                ))}
             </pre>
           </div>
         ) : (
           <div key={si}>{seg.content.split("\n").map((l, i) => renderLine(l, i))}</div>
-        )
+        ),
       )}
     </div>
   );
 }
 
 function SyntaxLine({ line, lang }: { line: string; lang: string }) {
-  const pyKw = ["def","return","if","elif","else","for","while","in","and","or","not","True","False","None","print","len","range","import","from","class","pass","break","continue","try","except","with","as","lambda","yield"];
-  const jsKw = ["const","let","var","function","return","if","else","for","while","class","import","from","export","default","new","this","typeof","await","async","=>"];
-  const sqlKw = ["SELECT","FROM","WHERE","AND","OR","ORDER","BY","BETWEEN","LIKE","IN","JOIN","LEFT","RIGHT","INNER","GROUP","HAVING","LIMIT","INSERT","UPDATE","DELETE","CREATE","DROP","TABLE","AS","ON","SET"];
+  const pyKw = [
+    "def",
+    "return",
+    "if",
+    "elif",
+    "else",
+    "for",
+    "while",
+    "in",
+    "and",
+    "or",
+    "not",
+    "True",
+    "False",
+    "None",
+    "print",
+    "len",
+    "range",
+    "import",
+    "from",
+    "class",
+    "pass",
+    "break",
+    "continue",
+    "try",
+    "except",
+    "with",
+    "as",
+    "lambda",
+    "yield",
+  ];
+  const jsKw = [
+    "const",
+    "let",
+    "var",
+    "function",
+    "return",
+    "if",
+    "else",
+    "for",
+    "while",
+    "class",
+    "import",
+    "from",
+    "export",
+    "default",
+    "new",
+    "this",
+    "typeof",
+    "await",
+    "async",
+    "=>",
+  ];
+  const sqlKw = [
+    "SELECT",
+    "FROM",
+    "WHERE",
+    "AND",
+    "OR",
+    "ORDER",
+    "BY",
+    "BETWEEN",
+    "LIKE",
+    "IN",
+    "JOIN",
+    "LEFT",
+    "RIGHT",
+    "INNER",
+    "GROUP",
+    "HAVING",
+    "LIMIT",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "CREATE",
+    "DROP",
+    "TABLE",
+    "AS",
+    "ON",
+    "SET",
+  ];
   const keywords = lang === "sql" ? sqlKw : lang.startsWith("js") ? jsKw : pyKw;
 
   const parts = line.split(/(\s+|[()[\]{},.:=+\-*/!<>])/g);
   return (
     <div className="min-h-[1.5rem]">
       {parts.map((p, i) => {
-        if (keywords.includes(p)) return <span key={i} className="text-purple-400 font-semibold">{p}</span>;
-        if (/^["'`]/.test(p) && p.length > 1) return <span key={i} className="text-green-400">{p}</span>;
-        if (/^-?\d+(\.\d+)?$/.test(p.trim()) && p.trim()) return <span key={i} className="text-amber-300">{p}</span>;
-        if (p.startsWith("#") || p.startsWith("//")) return <span key={i} className="text-zinc-500 italic">{p}</span>;
-        return <span key={i} className="text-zinc-200">{p}</span>;
+        if (keywords.includes(p))
+          return (
+            <span key={i} className="text-purple-400 font-semibold">
+              {p}
+            </span>
+          );
+        if (/^["'`]/.test(p) && p.length > 1)
+          return (
+            <span key={i} className="text-green-400">
+              {p}
+            </span>
+          );
+        if (/^-?\d+(\.\d+)?$/.test(p.trim()) && p.trim())
+          return (
+            <span key={i} className="text-amber-300">
+              {p}
+            </span>
+          );
+        if (p.startsWith("#") || p.startsWith("//"))
+          return (
+            <span key={i} className="text-zinc-500 italic">
+              {p}
+            </span>
+          );
+        return (
+          <span key={i} className="text-zinc-200">
+            {p}
+          </span>
+        );
       })}
     </div>
   );
@@ -201,10 +384,10 @@ function ConsolePanel({
           verdict === "pass"
             ? "bg-emerald-900/40"
             : verdict === "wrong_answer"
-            ? "bg-red-900/40"
-            : verdict === "runtime_error" || verdict === "timeout"
-            ? "bg-red-900/40"
-            : "bg-zinc-900"
+              ? "bg-red-900/40"
+              : verdict === "runtime_error" || verdict === "timeout"
+                ? "bg-red-900/40"
+                : "bg-zinc-900"
         }`}
       >
         <Terminal className="h-4 w-4 text-zinc-400" />
@@ -261,7 +444,9 @@ function ConsolePanel({
                     {tc.passed ? "PASS" : "FAIL"}
                   </span>
                   <span className="text-xs text-zinc-400 font-mono">{tc.runtime_ms}ms</span>
-                  <span className="text-xs text-zinc-500 ml-auto">{tc.name || `Test ${i + 1}`}</span>
+                  <span className="text-xs text-zinc-500 ml-auto">
+                    {tc.name || `Test ${i + 1}`}
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                   <div>
@@ -280,7 +465,9 @@ function ConsolePanel({
                   )}
                 </div>
                 {tc.stderr && (
-                  <pre className="mt-2 text-xs text-red-400 font-mono whitespace-pre-wrap">{tc.stderr}</pre>
+                  <pre className="mt-2 text-xs text-red-400 font-mono whitespace-pre-wrap">
+                    {tc.stderr}
+                  </pre>
                 )}
               </div>
             ))}
@@ -295,17 +482,16 @@ function ConsolePanel({
             verdict === "pass"
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
               : verdict === "wrong_answer"
-              ? "bg-red-500/10 border-red-500/30 text-red-400"
-              : verdict === "runtime_error"
-              ? "bg-red-500/10 border-red-500/30 text-red-400"
-              : verdict === "timeout"
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-              : "bg-zinc-800/50 border-zinc-700/30 text-zinc-400"
+                ? "bg-red-500/10 border-red-500/30 text-red-400"
+                : verdict === "runtime_error"
+                  ? "bg-red-500/10 border-red-500/30 text-red-400"
+                  : verdict === "timeout"
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    : "bg-zinc-800/50 border-zinc-700/30 text-zinc-400"
           }`}
         >
-          {verdict === "pass" && (testResults
-            ? `Tum testler gecti!`
-            : "Dogru! Beklenen cikti ile eslesti.")}
+          {verdict === "pass" &&
+            (testResults ? `Tum testler gecti!` : "Dogru! Beklenen cikti ile eslesti.")}
           {verdict === "wrong_answer" && (
             <>
               Testlerden biri basarisiz.
@@ -334,7 +520,7 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
   const [result, setResult] = useState<QuizAnswerResponse | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
 
-  const question = step.content_data?.question as string ?? "";
+  const question = (step.content_data?.question as string) ?? "";
   const options = (step.content_data?.options as { id: string; label: string }[]) ?? [];
   const hints = (step.content_data?.hints as string[]) ?? [];
   const xpPenalty = hintLevel * 0.2;
@@ -350,7 +536,9 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
       setSubmitted(true);
       if (res.is_correct) {
         const earned = Math.round(res.xp_earned * (1 - xpPenalty));
-        toast.success(`+${earned} XP kazandın!${hintLevel > 0 ? ` (${Math.round(xpPenalty * 100)}% hint cezası)` : ""}`);
+        toast.success(
+          `+${earned} XP kazandın!${hintLevel > 0 ? ` (${Math.round(xpPenalty * 100)}% hint cezası)` : ""}`,
+        );
         setTimeout(onCorrect, 1200);
       }
     } catch {
@@ -358,7 +546,12 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
     }
   };
 
-  const reset = () => { setSelected(null); setSubmitted(false); setResult(null); setHintLevel(0); };
+  const reset = () => {
+    setSelected(null);
+    setSubmitted(false);
+    setResult(null);
+    setHintLevel(0);
+  };
 
   // Soruyu ve kod bloklarını ayır
   const qParts = question.split("```");
@@ -369,7 +562,12 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
       <div className="space-y-3">
         {qParts.map((part, i) =>
           i % 2 === 0 ? (
-            <p key={i} className="text-base leading-7 font-medium text-foreground whitespace-pre-line">{part.trim()}</p>
+            <p
+              key={i}
+              className="text-base leading-7 font-medium text-foreground whitespace-pre-line"
+            >
+              {part.trim()}
+            </p>
           ) : (
             <div key={i} className="rounded-xl overflow-hidden border border-border">
               <div className="bg-zinc-900 px-4 py-2 border-b border-zinc-700/50 flex items-center gap-2">
@@ -381,10 +579,15 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
                 <span className="ml-2 text-xs text-zinc-400 font-mono">python</span>
               </div>
               <pre className="bg-[#0d1117] p-4 text-sm font-mono leading-6">
-                {part.trim().split("\n").map((l, li) => <SyntaxLine key={li} line={l} lang="python" />)}
+                {part
+                  .trim()
+                  .split("\n")
+                  .map((l, li) => (
+                    <SyntaxLine key={li} line={l} lang="python" />
+                  ))}
               </pre>
             </div>
-          )
+          ),
         )}
       </div>
 
@@ -392,15 +595,25 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
       {!submitted && hints.length > 0 && hintLevel < hints.length && (
         <div className="rounded-xl bg-blue-500/8 border border-blue-500/30 p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-blue-400">İpucu ({hintLevel}/{hints.length}){xpPenalty > 0 ? ` · -%{Math.round(xpPenalty*100)} XP` : ""}</span>
-            <Button variant="ghost" size="sm" onClick={() => setHintLevel((h) => Math.min(h + 1, hints.length))} className="text-xs h-7">
+            <span className="text-xs font-semibold text-blue-400">
+              İpucu ({hintLevel}/{hints.length})
+              {xpPenalty > 0 ? ` · -%{Math.round(xpPenalty*100)} XP` : ""}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHintLevel((h) => Math.min(h + 1, hints.length))}
+              className="text-xs h-7"
+            >
               İpucu Göster
             </Button>
           </div>
           {hintLevel > 0 && (
             <div className="space-y-1">
               {hints.slice(0, hintLevel).map((h, i) => (
-                <p key={i} className="text-sm text-muted-foreground leading-6">💡 {h}</p>
+                <p key={i} className="text-sm text-muted-foreground leading-6">
+                  💡 {h}
+                </p>
               ))}
             </div>
           )}
@@ -410,7 +623,8 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
       {/* Şıklar */}
       <div className="grid gap-3">
         {options.map((opt) => {
-          let cls = "border-2 border-border bg-card hover:bg-accent/40 hover:border-primary/40 cursor-pointer";
+          let cls =
+            "border-2 border-border bg-card hover:bg-accent/40 hover:border-primary/40 cursor-pointer";
           if (submitted && result) {
             if (result.is_correct && opt.id === selected)
               cls = "border-2 border-emerald-500 bg-emerald-500/10 cursor-default";
@@ -429,17 +643,29 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
               onClick={() => setSelected(opt.id)}
               className={`w-full text-left px-5 py-4 rounded-xl transition-all flex items-center gap-4 ${cls}`}
             >
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-xs uppercase border-2 transition-colors
-                ${!submitted && selected === opt.id ? "border-primary bg-primary text-primary-foreground"
-                  : submitted && result?.is_correct && opt.id === selected ? "border-emerald-500 bg-emerald-500 text-white"
-                  : submitted && result?.correct_option === opt.id ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400"
-                  : submitted && !result?.is_correct && opt.id === selected ? "border-red-500 bg-red-500 text-white"
-                  : "border-muted-foreground/30 text-muted-foreground"}`}>
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-xs uppercase border-2 transition-colors
+                ${
+                  !submitted && selected === opt.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : submitted && result?.is_correct && opt.id === selected
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : submitted && result?.correct_option === opt.id
+                        ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400"
+                        : submitted && !result?.is_correct && opt.id === selected
+                          ? "border-red-500 bg-red-500 text-white"
+                          : "border-muted-foreground/30 text-muted-foreground"
+                }`}
+              >
                 {opt.id}
               </div>
               <span className="flex-1 text-sm font-medium">{opt.label}</span>
-              {submitted && result?.is_correct && opt.id === selected && <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />}
-              {submitted && !result?.is_correct && opt.id === selected && <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />}
+              {submitted && result?.is_correct && opt.id === selected && (
+                <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />
+              )}
+              {submitted && !result?.is_correct && opt.id === selected && (
+                <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+              )}
             </button>
           );
         })}
@@ -457,14 +683,30 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
       ) : (
         <div className="space-y-3">
           {/* Sonuç */}
-          <div className={`rounded-xl p-5 border ${result?.is_correct
-            ? "bg-emerald-500/10 border-emerald-500/30"
-            : "bg-red-500/10 border-red-500/30"}`}>
-            <div className={`font-bold text-base mb-2 flex items-center gap-2 ${result?.is_correct ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-              {result?.is_correct ? <><CheckCircle className="h-5 w-5" /> Doğru cevap! 🎉</> : <><AlertCircle className="h-5 w-5" /> Yanlış cevap</>}
+          <div
+            className={`rounded-xl p-5 border ${
+              result?.is_correct
+                ? "bg-emerald-500/10 border-emerald-500/30"
+                : "bg-red-500/10 border-red-500/30"
+            }`}
+          >
+            <div
+              className={`font-bold text-base mb-2 flex items-center gap-2 ${result?.is_correct ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+            >
+              {result?.is_correct ? (
+                <>
+                  <CheckCircle className="h-5 w-5" /> Doğru cevap! 🎉
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5" /> Yanlış cevap
+                </>
+              )}
             </div>
             {result?.explanation && (
-              <p className="text-sm text-muted-foreground whitespace-pre-line leading-6">{result.explanation}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line leading-6">
+                {result.explanation}
+              </p>
             )}
           </div>
           {/* Devam / Tekrar */}
@@ -475,7 +717,10 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
               </Button>
             )}
             {result?.is_correct && (
-              <Button onClick={onCorrect} className="flex-1 bg-[image:var(--gradient-primary)] text-primary-foreground">
+              <Button
+                onClick={onCorrect}
+                className="flex-1 bg-[image:var(--gradient-primary)] text-primary-foreground"
+              >
                 Sonraki Adım <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -490,12 +735,28 @@ function QuizStep({ step, onCorrect }: { step: StepResponse; onCorrect: () => vo
 // Code step — çalıştırmalı + console çıktılı
 // ─────────────────────────────────────────────────────
 
-function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => void }) {
+function CodeStep({
+  step,
+  course,
+  onComplete,
+}: {
+  step: StepResponse;
+  course: CoursePathResponse;
+  onComplete: () => void;
+}) {
   const starter = (step.content_data?.starter_code as string) ?? "";
   const solution = (step.content_data?.solution as string) ?? "";
   const instruction = (step.content_data?.instruction as string) ?? "";
   const expected = (step.content_data?.expected_output as string) ?? "";
   const hints = (step.content_data?.hints as string[]) ?? [];
+  const runtime = String(
+    step.runtime_language ??
+      (step.content_data?.language as string | undefined) ??
+      course.runtime_language ??
+      course.language ??
+      "python",
+  ).toLowerCase();
+  const isRuntimeSupported = SUPPORTED_RUNTIMES.has(runtime);
 
   const [code, setCode] = useState(starter);
   const [revealed, setRevealed] = useState(false);
@@ -508,7 +769,8 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
 
   const codeHistoryQuery = useQuery({
     queryKey: ["submissions", step.id],
-    queryFn: () => api.get<SubmissionStatusResponse[]>(`/execution/submissions?step_id=${step.id}&limit=20`),
+    queryFn: () =>
+      api.get<SubmissionStatusResponse[]>(`/execution/submissions?step_id=${step.id}&limit=20`),
     enabled: showHistory && !!user,
     staleTime: 10_000,
   });
@@ -540,13 +802,22 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
     }
   }, [commentText, commentLine, step.id, refetchComments]);
 
-  const revealSolution = () => { setCode(solution); setRevealed(true); setHintLevel(hints.length); };
-  const reset = () => { setCode(starter); setRevealed(false); setResult(null); setHintLevel(0); };
+  const revealSolution = () => {
+    setCode(solution);
+    setRevealed(true);
+    setHintLevel(hints.length);
+  };
+  const reset = () => {
+    setCode(starter);
+    setRevealed(false);
+    setResult(null);
+    setHintLevel(0);
+  };
 
   // Kodu çalıştır
   const runCode = async () => {
-    if (!user) {
-      toast.error("Kod çalıştırmak için giriş yapmalısın.");
+    if (!isRuntimeSupported) {
+      toast.error(`${runtime} için tarayıcı içi çalıştırma henüz desteklenmiyor.`);
       return;
     }
     if (!code.trim()) {
@@ -559,19 +830,31 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
 
     try {
       const token = tokenStorage.get();
-      if (!token) {
-        toast.error("Oturum süren dolmuş. Lütfen tekrar giriş yap.");
+      if (!user || !token) {
+        if (!step.previewable && user) {
+          toast.error("Bu kod adımını çalıştırmak için giriş yapmalısın.");
+          setIsRunning(false);
+          return;
+        }
+        const preview = await api.post<ExecutionResult>("/execution/preview", {
+          step_id: step.id,
+          code,
+        });
+        setResult(preview);
         setIsRunning(false);
+        if (preview.verdict === "pass") {
+          toast.success("Önizleme başarılı! İlerlemeni kaydetmek için hesap oluştur.");
+        }
         return;
       }
 
       // Submission gönder
       const submitRes = await api.post<{ submission_id: string; status: string }>(
         "/execution/submit",
-        { step_id: step.id, code }
+        { step_id: step.id, code },
       );
 
-          // WebSocket ile sonucu dinle
+      // WebSocket ile sonucu dinle
       const disconnect = connectExecutionWS(submitRes.submission_id, token, {
         onResult: (data) => {
           setResult(data);
@@ -618,15 +901,25 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
       {hints.length > 0 && hintLevel < hints.length && !revealed && (
         <div className="rounded-xl bg-blue-500/8 border border-blue-500/30 p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-blue-400">İpucu ({hintLevel}/{hints.length}){xpPenalty > 0 ? ` · -%{Math.round(xpPenalty*100)} XP` : ""}</span>
-            <Button variant="ghost" size="sm" onClick={() => setHintLevel((h) => Math.min(h + 1, hints.length))} className="text-xs h-7">
+            <span className="text-xs font-semibold text-blue-400">
+              İpucu ({hintLevel}/{hints.length})
+              {xpPenalty > 0 ? ` · -%{Math.round(xpPenalty*100)} XP` : ""}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHintLevel((h) => Math.min(h + 1, hints.length))}
+              className="text-xs h-7"
+            >
               İpucu Göster
             </Button>
           </div>
           {hintLevel > 0 && (
             <div className="space-y-1">
               {hints.slice(0, hintLevel).map((h, i) => (
-                <p key={i} className="text-sm text-muted-foreground leading-6">💡 {h}</p>
+                <p key={i} className="text-sm text-muted-foreground leading-6">
+                  💡 {h}
+                </p>
               ))}
             </div>
           )}
@@ -651,7 +944,10 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
             >
               <History className="h-3 w-3" /> Geçmiş
             </button>
-            <button onClick={reset} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1">
+            <button
+              onClick={reset}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1"
+            >
               <RotateCcw className="h-3 w-3" /> Sıfırla
             </button>
             {!revealed && solution && (
@@ -667,13 +963,20 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
           </div>
         </div>
         {/* Kod alanı */}
+        {!isRuntimeSupported && (
+          <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            {runtime.toUpperCase()} runtime'ı tarayıcı içi çalıştırmada henüz desteklenmiyor.
+          </div>
+        )}
         <CodeEditor
           value={code}
           onChange={setCode}
-          language="python"
+          language={runtime}
           minHeight="300px"
           placeholder="# Kodunu buraya yaz..."
-          onLineClick={user ? (line) => setCommentLine(commentLine === line ? null : line) : undefined}
+          onLineClick={
+            user ? (line) => setCommentLine(commentLine === line ? null : line) : undefined
+          }
         />
       </div>
 
@@ -685,7 +988,10 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
               <MessageSquare className="h-3.5 w-3.5" /> Satır {commentLine} için yorum
             </span>
             <button
-              onClick={() => { setCommentLine(null); setCommentText(""); }}
+              onClick={() => {
+                setCommentLine(null);
+                setCommentText("");
+              }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               İptal
@@ -725,9 +1031,14 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
                 <div className="space-y-2">
                   {lineCommentsForLine.map((c) => (
                     <div key={c.id} className="text-sm">
-                      <span className="text-xs font-medium text-primary">{c.email.split("@")[0]}</span>
+                      <span className="text-xs font-medium text-primary">
+                        {c.email.split("@")[0]}
+                      </span>
                       <span className="text-xs text-muted-foreground ml-2">
-                        {new Date(c.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(c.created_at).toLocaleTimeString("tr-TR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                       <p className="text-sm text-foreground mt-0.5">{c.content}</p>
                     </div>
@@ -743,13 +1054,17 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
       <div className="flex items-center gap-3">
         <Button
           onClick={runCode}
-          disabled={isRunning || !user}
+          disabled={isRunning || !code.trim() || !isRuntimeSupported}
           className="flex-1 h-11 text-base bg-[image:var(--gradient-primary)] text-primary-foreground disabled:opacity-50"
         >
           {isRunning ? (
-            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Çalışıyor...</>
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Çalışıyor...
+            </>
           ) : (
-            <><PlayCircle className="mr-2 h-5 w-5" /> Çalıştır</>
+            <>
+              <PlayCircle className="mr-2 h-5 w-5" /> Çalıştır
+            </>
           )}
         </Button>
 
@@ -791,10 +1106,14 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
         <div className="rounded-xl border border-border p-4 space-y-3">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
             <span>Geçmiş Denemeler</span>
-            {codeHistoryQuery.isLoading && <span className="text-xs text-primary animate-pulse">Yükleniyor...</span>}
+            {codeHistoryQuery.isLoading && (
+              <span className="text-xs text-primary animate-pulse">Yükleniyor...</span>
+            )}
           </h4>
           {codeHistoryQuery.data?.length === 0 && (
-            <p className="text-xs text-muted-foreground">Henüz deneme yok. Kod yaz ve "Çalıştır"a bas!</p>
+            <p className="text-xs text-muted-foreground">
+              Henüz deneme yok. Kod yaz ve "Çalıştır"a bas!
+            </p>
           )}
           {codeHistoryQuery.data?.map((h, i) => (
             <div key={h.submission_id} className="flex items-center gap-3 text-xs">
@@ -803,8 +1122,8 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
                   h.verdict === "pass"
                     ? "bg-emerald-500/10 text-emerald-400"
                     : h.verdict === "wrong_answer"
-                    ? "bg-red-500/10 text-red-400"
-                    : "bg-zinc-500/10 text-zinc-400"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-zinc-500/10 text-zinc-400"
                 }`}
               >
                 {h.verdict === "pass" ? "PASS" : h.verdict === "wrong_answer" ? "FAIL" : "—"}
@@ -812,7 +1131,9 @@ function CodeStep({ step, onComplete }: { step: StepResponse; onComplete: () => 
               <span className="text-muted-foreground">
                 {h.runtime_ms != null ? `${h.runtime_ms}ms` : "—"}
               </span>
-              <span className="text-muted-foreground truncate max-w-[120px]">{h.code?.slice(0, 40)}...</span>
+              <span className="text-muted-foreground truncate max-w-[120px]">
+                {h.code?.slice(0, 40)}...
+              </span>
               <button
                 onClick={() => setCode(h.code || "")}
                 className="text-primary hover:underline ml-auto"
@@ -860,7 +1181,8 @@ function LockedContent({ isGuest }: { isGuest: boolean }) {
         </div>
         <h3 className="text-xl font-bold text-foreground mb-2">Devam etmek için kayıt ol</h3>
         <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-          Pratik adımları (quiz ve kod) sadece üyeler görebilir. Ücretsiz hesap oluştur, tüm kurslara eriş!
+          Pratik adımları (quiz ve kod) sadece üyeler görebilir. Ücretsiz hesap oluştur, tüm
+          kurslara eriş!
         </p>
         <div className="flex gap-3">
           <Button asChild className="bg-[image:var(--gradient-primary)] text-primary-foreground">
@@ -904,7 +1226,11 @@ function CourseDetail() {
 
   const courseSummary = courses?.find((c) => slugify(c.title) === slug);
 
-  const { data: course, isLoading: detailLoading, isError } = useQuery<CoursePathResponse>({
+  const {
+    data: course,
+    isLoading: detailLoading,
+    isError,
+  } = useQuery<CoursePathResponse>({
     queryKey: ["course-path", courseSummary?.id ?? slug],
     enabled: !!courseSummary?.id,
     staleTime: 60_000,
@@ -925,7 +1251,9 @@ function CourseDetail() {
   // myPath'ten completedIds set'ini oluştur
   const completedIds = new Set<string>();
   if (myPath && typeof myPath === "object" && "sections" in myPath) {
-    for (const sec of (myPath as { sections: { steps: { step_id: string; is_completed: boolean }[] }[] }).sections) {
+    for (const sec of (
+      myPath as { sections: { steps: { step_id: string; is_completed: boolean }[] }[] }
+    ).sections) {
       for (const s of sec.steps) {
         if (s.is_completed) completedIds.add(s.step_id);
       }
@@ -972,7 +1300,9 @@ function CourseDetail() {
       <Layout>
         <div className="mx-auto max-w-xl px-6 py-24 text-center">
           <h1 className="text-3xl font-bold mb-4">Kurs bulunamadı</h1>
-          <Link to="/courses" className="text-primary story-link">← Tüm Kurslara Dön</Link>
+          <Link to="/courses" className="text-primary story-link">
+            ← Tüm Kurslara Dön
+          </Link>
         </div>
       </Layout>
     );
@@ -983,16 +1313,23 @@ function CourseDetail() {
   const hours = estimateHours(course);
   const level = deriveLevel(course);
   const completedCount = completedIds.size;
-  const progressPct = allSteps.length > 0 ? Math.round((completedCount / allSteps.length) * 100) : 0;
+  const progressPct =
+    allSteps.length > 0 ? Math.round((completedCount / allSteps.length) * 100) : 0;
 
   const activeStep = allSteps[activeIdx];
-  const activeMeta = activeStep ? (STEP_META[activeStep.step_type] ?? STEP_META.theory) : STEP_META.theory;
+  const activeMeta = activeStep
+    ? (STEP_META[activeStep.step_type] ?? STEP_META.theory)
+    : STEP_META.theory;
 
   // Sidebar için section → adım eşleştirmesi
   let gIdx = 0;
   const sectionsWithIdx = course.sections.map((sec) => ({
     ...sec,
-    startIdx: (() => { const s = gIdx; gIdx += sec.steps.length; return s; })(),
+    startIdx: (() => {
+      const s = gIdx;
+      gIdx += sec.steps.length;
+      return s;
+    })(),
   }));
 
   // Bu adım kullanıcıya açık mı?
@@ -1007,9 +1344,7 @@ function CourseDetail() {
     if (!step) return false;
 
     if (!user) {
-      // Misafir: sadece theory adımları önizlenebilir
-      if (step.step_type !== "theory") return false;
-      return idx < FREE_STEPS;
+      return idx < FREE_STEPS && FREE_PREVIEW_TYPES.has(step.step_type);
     }
 
     // Giriş yapmış: sıralı kilit
@@ -1020,11 +1355,13 @@ function CourseDetail() {
 
   return (
     <Layout>
-
       {/* ═══ HERO ════════════════════════════════════════ */}
       <div className="border-b border-border bg-[image:var(--gradient-hero)]">
         <div className="mx-auto max-w-7xl px-6 py-8">
-          <Link to="/courses" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-5 story-link">
+          <Link
+            to="/courses"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-5 story-link"
+          >
             <ArrowLeft className="h-3.5 w-3.5" /> Tüm Kurslar
           </Link>
 
@@ -1038,11 +1375,19 @@ function CourseDetail() {
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold text-foreground leading-tight">{course.title}</h1>
-              <p className="mt-2 text-muted-foreground max-w-xl leading-relaxed">{course.description}</p>
+              <p className="mt-2 text-muted-foreground max-w-xl leading-relaxed">
+                {course.description}
+              </p>
               <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {hours} saat</span>
-                <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {allSteps.length} adım</span>
-                <span className="flex items-center gap-1.5"><Trophy className="h-4 w-4" /> {course.sections.length} bölüm</span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4" /> {hours} saat
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <BookOpen className="h-4 w-4" /> {allSteps.length} adım
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Trophy className="h-4 w-4" /> {course.sections.length} bölüm
+                </span>
                 {!user && (
                   <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1.5 font-medium">
                     <Lock className="h-4 w-4" /> İlk {FREE_STEPS} adım ücretsiz
@@ -1056,7 +1401,9 @@ function CourseDetail() {
               <div className="text-4xl font-bold text-primary mb-1">{progressPct}%</div>
               <div className="text-xs text-muted-foreground mb-3">tamamlandi</div>
               <Progress value={progressPct} className="h-2.5" />
-              <div className="mt-2.5 text-xs text-muted-foreground">{completedCount}/{allSteps.length} adim</div>
+              <div className="mt-2.5 text-xs text-muted-foreground">
+                {completedCount}/{allSteps.length} adim
+              </div>
               {progressPct === 100 && courseSummary && (
                 <div className="mt-4">
                   <CertificateButton courseId={courseSummary.id} courseTitle={course.title} />
@@ -1070,7 +1417,6 @@ function CourseDetail() {
       {/* ═══ BODY ════════════════════════════════════════ */}
       <div className="mx-auto max-w-7xl px-4 lg:px-6 py-8">
         <div className="grid gap-6 lg:grid-cols-[300px_1fr] items-start">
-
           {/* ── SOL PANEL — adım listesi ── */}
           <aside className="lg:sticky lg:top-4 space-y-1 bg-card rounded-2xl border border-border p-3 shadow-sm">
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
@@ -1095,26 +1441,36 @@ function CourseDetail() {
                         onClick={() => !locked && setActiveIdx(globalIdx)}
                         disabled={locked}
                         className={`w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-3 text-sm transition-all
-                          ${active
-                            ? "bg-primary text-primary-foreground shadow-sm font-medium"
-                            : done
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/15"
-                            : locked
-                            ? "opacity-50 cursor-not-allowed text-muted-foreground"
-                            : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                          ${
+                            active
+                              ? "bg-primary text-primary-foreground shadow-sm font-medium"
+                              : done
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/15"
+                                : locked
+                                  ? "opacity-50 cursor-not-allowed text-muted-foreground"
+                                  : "hover:bg-accent text-muted-foreground hover:text-foreground"
                           }`}
                       >
-                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs
-                          ${active ? "bg-white/20" : done ? "bg-emerald-500/20" : locked ? "bg-muted" : meta.bg}`}>
-                          {done
-                            ? <CheckCircle className={`h-4 w-4 ${active ? "text-white" : "text-emerald-500"}`} />
-                            : locked
-                            ? <Lock className="h-3 w-3 text-muted-foreground/50" />
-                            : <meta.icon className={`h-3.5 w-3.5 ${active ? "text-white" : meta.color}`} />
-                          }
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs
+                          ${active ? "bg-white/20" : done ? "bg-emerald-500/20" : locked ? "bg-muted" : meta.bg}`}
+                        >
+                          {done ? (
+                            <CheckCircle
+                              className={`h-4 w-4 ${active ? "text-white" : "text-emerald-500"}`}
+                            />
+                          ) : locked ? (
+                            <Lock className="h-3 w-3 text-muted-foreground/50" />
+                          ) : (
+                            <meta.icon
+                              className={`h-3.5 w-3.5 ${active ? "text-white" : meta.color}`}
+                            />
+                          )}
                         </div>
                         <span className="flex-1 truncate text-sm">{step.title}</span>
-                        <span className={`text-[11px] shrink-0 font-medium ${active ? "text-white/70" : "text-muted-foreground"}`}>
+                        <span
+                          className={`text-[11px] shrink-0 font-medium ${active ? "text-white/70" : "text-muted-foreground"}`}
+                        >
                           +{step.xp_reward}
                         </span>
                       </button>
@@ -1134,8 +1490,11 @@ function CourseDetail() {
                 <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                   Soldaki listeden bir adım seç veya aşağıdan başla.
                 </p>
-                <Button onClick={() => setActiveIdx(0)} size="lg"
-                  className="bg-[image:var(--gradient-primary)] text-primary-foreground">
+                <Button
+                  onClick={() => setActiveIdx(0)}
+                  size="lg"
+                  className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+                >
                   İlk Adımdan Başla <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Card>
@@ -1146,46 +1505,58 @@ function CourseDetail() {
                 <div className={`px-6 md:px-8 py-5 border-b border-border ${activeMeta.bg}`}>
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${activeMeta.border} ${activeMeta.bg}`}>
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl border ${activeMeta.border} ${activeMeta.bg}`}
+                      >
                         <activeMeta.icon className={`h-5 w-5 ${activeMeta.color}`} />
                       </div>
                       <div>
-                        <div className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${activeMeta.color}`}>
+                        <div
+                          className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${activeMeta.color}`}
+                        >
                           {activeMeta.label} · Adım {activeIdx + 1}/{allSteps.length}
                         </div>
                         <h2 className="text-xl font-bold text-foreground">{activeStep.title}</h2>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-sm shrink-0">
-                      <Zap className={`mr-1 h-3.5 w-3.5 ${activeMeta.color}`} />
-                      +{activeStep.xp_reward} XP
+                      <Zap className={`mr-1 h-3.5 w-3.5 ${activeMeta.color}`} />+
+                      {activeStep.xp_reward} XP
                     </Badge>
                   </div>
                 </div>
 
                 <div className="p-6 md:p-8">
-                  {activeStep.step_type === "theory" && (
-                    <TheoryStep step={activeStep} />
-                  )}
+                  {activeStep.step_type === "theory" && <TheoryStep step={activeStep} />}
                   {activeStep.step_type === "quiz" && (
                     <QuizStep step={activeStep} onCorrect={goNext} />
                   )}
                   {activeStep.step_type === "code" && (
-                    <CodeStep step={activeStep} onComplete={goNext} />
+                    <CodeStep step={activeStep} course={course} onComplete={goNext} />
                   )}
 
                   {activeStep.step_type === "theory" && (
                     <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-                      <Button variant="outline" disabled={activeIdx === 0}
-                        onClick={() => setActiveIdx(activeIdx - 1)}>
+                      <Button
+                        variant="outline"
+                        disabled={activeIdx === 0}
+                        onClick={() => setActiveIdx(activeIdx - 1)}
+                      >
                         <ArrowLeft className="mr-2 h-4 w-4" /> Önceki
                       </Button>
-                      <Button onClick={goNext}
-                        className="bg-[image:var(--gradient-primary)] text-primary-foreground">
-                        {activeIdx === allSteps.length - 1
-                          ? <><Trophy className="mr-2 h-4 w-4" /> Kursu Tamamla</>
-                          : <>Anladım, Devam Et <ArrowRight className="ml-2 h-4 w-4" /></>
-                        }
+                      <Button
+                        onClick={goNext}
+                        className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+                      >
+                        {activeIdx === allSteps.length - 1 ? (
+                          <>
+                            <Trophy className="mr-2 h-4 w-4" /> Kursu Tamamla
+                          </>
+                        ) : (
+                          <>
+                            Anladım, Devam Et <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -1193,7 +1564,6 @@ function CourseDetail() {
               </Card>
             )}
           </div>
-
         </div>
       </div>
     </Layout>

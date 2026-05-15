@@ -1,8 +1,19 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, Menu, X, Moon, Sun, User as UserIcon, LogOut,
-  Trophy, BookOpen, LayoutDashboard, Info, Bell, MapIcon,
+  Sparkles,
+  Menu,
+  X,
+  Moon,
+  Sun,
+  User as UserIcon,
+  LogOut,
+  Trophy,
+  BookOpen,
+  LayoutDashboard,
+  Info,
+  Bell,
+  MapIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +21,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { api } from "@/lib/api";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import type { NotificationResponse } from "@/lib/api-types";
 
@@ -74,7 +89,13 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" className="hover-scale">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="hover-scale"
+          >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
@@ -82,7 +103,12 @@ export function Navbar() {
             <>
               {/* Notification bell */}
               <div className="relative">
-                <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)} className="hover-scale">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="hover-scale"
+                >
                   <Bell className="h-4 w-4" />
                   {(unread?.count ?? 0) > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
@@ -95,7 +121,10 @@ export function Navbar() {
                   <div className="absolute right-0 mt-2 w-80 rounded-xl border border-border bg-card shadow-lg animate-scale-in overflow-hidden z-50">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                       <span className="text-sm font-semibold">Bildirimler</span>
-                      <button onClick={markAllRead} className="text-xs text-primary hover:underline">
+                      <button
+                        onClick={markAllRead}
+                        className="text-xs text-primary hover:underline"
+                      >
                         Tümünü okundu işaretle
                       </button>
                     </div>
@@ -113,13 +142,15 @@ export function Navbar() {
                           }`}
                           onClick={() => {
                             api.post(`/notifications/${n.id}/read`).catch(() => {});
-                            if (n.link) navigate({ to: n.link as any });
+                            if (n.link) window.location.href = n.link;
                             setNotifOpen(false);
                           }}
                         >
                           <div className="font-medium text-xs text-primary">{n.type}</div>
                           <div className="text-sm text-foreground">{n.title}</div>
-                          {n.body && <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>}
+                          {n.body && (
+                            <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -130,7 +161,8 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2 hover-scale">
-                    <UserIcon className="h-4 w-4" /> <span className="hidden sm:inline">{user.email?.split("@")[0]}</span>
+                    <UserIcon className="h-4 w-4" />{" "}
+                    <span className="hidden sm:inline">{user.email?.split("@")[0]}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="animate-scale-in">
@@ -149,7 +181,12 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => navigate({ to: "/login" })}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex"
+                onClick={() => navigate({ to: "/login" })}
+              >
                 Log in
               </Button>
               <Button
@@ -162,7 +199,13 @@ export function Navbar() {
             </>
           )}
 
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+          >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>

@@ -43,6 +43,11 @@ class AdminCourseCreate(BaseModel):
     title: str = Field(..., max_length=255)
     description: str | None = None
     language: str = Field(..., max_length=100)
+    level: str | None = Field(None, max_length=50)
+    runtime_language: str | None = Field(None, max_length=50)
+    runtime_version: str | None = Field(None, max_length=50)
+    outcomes: list[str] | None = None
+    prerequisites: list[str] | None = None
 
 
 class AdminSectionCreate(BaseModel):
@@ -60,6 +65,9 @@ class AdminStepCreate(BaseModel):
     order: int = 0
     xp_reward: int = Field(default=10, ge=0)
     content_data: dict | None = None
+    runtime_language: str | None = Field(None, max_length=50)
+    runtime_version: str | None = Field(None, max_length=50)
+    previewable: bool = False
 
 
 class AdminStepUpdate(BaseModel):
@@ -70,3 +78,6 @@ class AdminStepUpdate(BaseModel):
     order: int | None = None
     xp_reward: int | None = Field(None, ge=0)
     content_data: dict | None = None
+    runtime_language: str | None = Field(None, max_length=50)
+    runtime_version: str | None = Field(None, max_length=50)
+    previewable: bool | None = None

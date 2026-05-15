@@ -88,7 +88,8 @@ function RoadmapPage() {
           <Reveal>
             <h1 className="text-4xl font-bold">Choose Your Path</h1>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-              Select a programming language and follow a structured learning roadmap from beginner to advanced.
+              Select a programming language and follow a structured learning roadmap from beginner
+              to advanced.
             </p>
           </Reveal>
 
@@ -130,7 +131,7 @@ function RoadmapPage() {
             {path.levels?.map((level, idx) => {
               const col = LEVEL_COLORS[idx % LEVEL_COLORS.length];
               const progress = pathWithProgress?.levels?.[idx];
-              const isUnlocked = progress?.unlocked ?? (idx === 0);
+              const isUnlocked = progress?.unlocked ?? idx === 0;
               const progressPct = progress?.progress_pct ?? 0;
 
               return (
@@ -141,11 +142,16 @@ function RoadmapPage() {
                     `}
                     onClick={() => {
                       if (!isUnlocked) return;
-                      if (!user) { navigate({ to: "/login" }); return; }
+                      if (!user) {
+                        navigate({ to: "/login" });
+                        return;
+                      }
                       navigate({ to: `/courses/${slugify(level.course.title)}` });
                     }}
                   >
-                    <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 ${col.border} ${col.bg}`}>
+                    <div
+                      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 ${col.border} ${col.bg}`}
+                    >
                       {progressPct >= 100 ? (
                         <CheckCircle2 className={`h-7 w-7 ${col.text}`} />
                       ) : !isUnlocked ? (
@@ -157,10 +163,13 @@ function RoadmapPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className={col.text}>{level.level_name}</Badge>
+                        <Badge variant="outline" className={col.text}>
+                          {level.level_name}
+                        </Badge>
                         {!isUnlocked && (
                           <Badge variant="outline" className="text-muted-foreground">
-                            <Lock className="h-3 w-3 mr-1" /> {level.required_progress_pct}% required
+                            <Lock className="h-3 w-3 mr-1" /> {level.required_progress_pct}%
+                            required
                           </Badge>
                         )}
                         {progressPct >= 100 && (
@@ -169,12 +178,18 @@ function RoadmapPage() {
                           </Badge>
                         )}
                       </div>
-                      <h3 className="text-xl font-bold mt-2 text-foreground">{level.course.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{level.course.description}</p>
+                      <h3 className="text-xl font-bold mt-2 text-foreground">
+                        {level.course.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {level.course.description}
+                      </p>
                       {user && isUnlocked && (
                         <div className="mt-4 flex items-center gap-4">
                           <Progress value={progressPct} className="h-2 flex-1" />
-                          <span className="text-xs text-muted-foreground shrink-0">{progressPct}%</span>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {progressPct}%
+                          </span>
                         </div>
                       )}
                     </div>

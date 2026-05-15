@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.modules.courses.models import Course, Section, Step
+from app.modules.execution.models import Submission, SubmissionVerdict
 from app.modules.notifications.triggers import notify_course_completed
 from app.modules.progress.models import UserProgress
 
@@ -170,6 +171,25 @@ async def mark_step_complete(
                 await notify_course_completed(db, user_id, course.title, course_id)
 
     return progress, xp_earned
+
+
+async def has_successful_submission(
+    db: AsyncSession,
+    user_id: UUID,
+    step_id: UUID,
+) -> bool:
+    """Return whether the user has a passing submission for a code step."""
+    stmt = (
+        select(Submission)
+        .where(
+            Submission.user_id == user_id,
+            Submission.step_id == step_id,
+            Submission.verdict == SubmissionVerdict.PASS,
+        )
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none() is not None
 
 
 async def get_user_progress_for_course(

@@ -33,8 +33,7 @@ function SignupPage() {
       toast.success("Account created! Welcome to Lumina.");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      const msg =
-        err instanceof ApiError ? err.message : "Sign up failed. Please try again.";
+      const msg = err instanceof ApiError ? err.message : "Sign up failed. Please try again.";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -78,9 +77,7 @@ function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
-              At least 8 characters.
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
           </div>
           <Button
             type="submit"

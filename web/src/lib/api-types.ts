@@ -28,7 +28,6 @@ export interface RegisterPayload {
   password: string;
 }
 
-
 // -------------------------------------------------------------
 // Courses
 // -------------------------------------------------------------
@@ -43,6 +42,9 @@ export interface StepResponse {
   content_data: Record<string, unknown> | null;
   order: number;
   xp_reward: number;
+  runtime_language: string | null;
+  runtime_version: string | null;
+  previewable: boolean;
 }
 
 export interface SectionWithSteps {
@@ -58,12 +60,17 @@ export interface CourseResponse {
   title: string;
   description: string | null;
   language: string;
+  level: string | null;
+  runtime_language: string | null;
+  runtime_version: string | null;
+  last_reviewed_at: string | null;
+  outcomes: string[] | null;
+  prerequisites: string[] | null;
 }
 
 export interface CoursePathResponse extends CourseResponse {
   sections: SectionWithSteps[];
 }
-
 
 // -------------------------------------------------------------
 // Learning Path (Roadmap)
@@ -112,7 +119,6 @@ export interface StepCompleteResponse {
   xp_earned: number;
 }
 
-
 // -------------------------------------------------------------
 // Gamification
 // -------------------------------------------------------------
@@ -137,7 +143,6 @@ export interface CommentResponse {
   content: string;
   created_at: string;
 }
-
 
 // -------------------------------------------------------------
 // Execution (Sandbox)
@@ -183,8 +188,8 @@ export interface SubmissionStatusResponse {
 }
 
 export interface ExecutionResult {
-  submission_id: string;
-  status: SubmissionStatus;
+  submission_id?: string;
+  status?: SubmissionStatus;
   output: string | null;
   stdout: string | null;
   stderr: string | null;
@@ -192,6 +197,12 @@ export interface ExecutionResult {
   runtime_ms: number | null;
   verdict: SubmissionVerdict | null;
   test_results: TestResult[] | null;
+  timed_out?: boolean;
+}
+
+export interface CheckoutResponse {
+  checkout_url: string;
+  session_id: string;
 }
 
 // -------------------------------------------------------------

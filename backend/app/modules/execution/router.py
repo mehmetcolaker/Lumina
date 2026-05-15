@@ -7,16 +7,25 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.database import async_session_maker, get_db
 from app.core.redis_client import get_redis
 from app.modules.execution import tasks
 from app.modules.execution.connection_manager import manager
+from app.modules.courses.models import Section, Step
+from app.modules.execution.docker_service import (
+    run_all_test_cases,
+    run_code_in_sandbox,
+    supported_languages,
+)
 from app.modules.execution.models import Submission, SubmissionStatus
 from app.modules.execution.schemas import (
+    CodePreviewRequest,
     CodeSubmitRequest,
     CodeSubmitResponse,
+    ExecutionResult,
     SubmissionStatusResponse,
 )
 from app.modules.users.router import get_current_user
@@ -72,6 +81,133 @@ async def submit_code(
     )
 
 
+def _submission_response(submission: Submission) -> SubmissionStatusResponse:
+    test_results = submission.test_results
+    if isinstance(test_results, str):
+        try:
+            test_results = json.loads(test_results)
+        except json.JSONDecodeError:
+            test_results = None
+
+    return SubmissionStatusResponse(
+        submission_id=submission.id,
+        status=submission.status.value,
+        code=submission.code,
+        output=submission.output,
+        stdout=submission.stdout,
+        stderr=submission.stderr,
+        exit_code=submission.exit_code,
+        runtime_ms=submission.runtime_ms,
+        verdict=submission.verdict.value if submission.verdict else None,
+        test_results=test_results,
+        created_at=submission.created_at.isoformat() if submission.created_at else None,
+    )
+
+
+def _resolve_step_language(step: Step) -> str:
+    explicit = step.runtime_language
+    content_language = (step.content_data or {}).get("language")
+    course_language = None
+    if step.section and step.section.course:
+        course_language = step.section.course.runtime_language or step.section.course.language
+    return str(explicit or content_language or course_language or "python").lower()
+
+
+def _grade_preview(
+    code: str,
+    language: str,
+    content: dict,
+) -> tuple[dict, str | None]:
+    result = run_code_in_sandbox(code, language)
+    expected_output = content.get("expected_output")
+    compare_mode = content.get("compare_mode", "trim")
+    test_cases = content.get("test_cases")
+
+    verdict = "pass"
+    test_results = None
+    if result["timed_out"]:
+        verdict = "timeout"
+    elif result["exit_code"] != 0:
+        verdict = "runtime_error"
+    elif isinstance(test_cases, list) and test_cases:
+        test_results = run_all_test_cases(code, language, test_cases)
+        verdict = "pass" if all(t.get("passed") for t in test_results) else "wrong_answer"
+    elif isinstance(expected_output, str) and expected_output:
+        actual = result["stdout"].strip()
+        expected = expected_output.strip()
+        if compare_mode == "contains":
+            verdict = "pass" if expected in actual else "wrong_answer"
+        elif compare_mode == "exact":
+            verdict = "pass" if result["stdout"] == expected_output else "wrong_answer"
+        else:
+            verdict = "pass" if actual == expected else "wrong_answer"
+
+    result["verdict"] = verdict
+    result["test_results"] = test_results
+    return result, verdict
+
+
+@router.post(
+    "/preview",
+    response_model=ExecutionResult,
+    summary="Run code for a public preview step without saving progress",
+)
+async def preview_code(
+    payload: CodePreviewRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ExecutionResult:
+    """Run code for explicitly previewable code steps.
+
+    This powers the guest trial experience. It never creates submissions,
+    awards XP, or marks progress complete.
+    """
+    stmt = (
+        select(Step)
+        .options(selectinload(Step.section).selectinload(Section.course))
+        .where(Step.id == payload.step_id)
+    )
+    result = await db.execute(stmt)
+    step = result.scalar_one_or_none()
+    if step is None:
+        raise HTTPException(status_code=404, detail="Step not found.")
+    is_default_preview = False
+    if step.section:
+        course_stmt = (
+            select(Step.id)
+            .join(Section, Step.section_id == Section.id)
+            .where(Section.course_id == step.section.course_id)
+            .order_by(Section.order, Step.order)
+            .limit(3)
+        )
+        first_steps = [row[0] for row in (await db.execute(course_stmt)).all()]
+        is_default_preview = step.id in first_steps
+
+    if step.step_type.value != "code" or not (step.previewable or is_default_preview):
+        raise HTTPException(status_code=403, detail="This step is not available for preview.")
+
+    language = _resolve_step_language(step)
+    if language not in supported_languages():
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{language}' runtime is not supported for browser execution yet.",
+        )
+
+    try:
+        data, _ = _grade_preview(payload.code, language, step.content_data or {})
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return ExecutionResult(
+        stdout=data["stdout"],
+        stderr=data["stderr"],
+        exit_code=data["exit_code"],
+        runtime_ms=data["runtime_ms"],
+        timed_out=data["timed_out"],
+        verdict=data.get("verdict"),
+        test_results=data.get("test_results"),
+    )
+
+
 @router.get(
     "/status/{submission_id}",
     response_model=SubmissionStatusResponse,
@@ -108,16 +244,7 @@ async def get_submission_status(
             detail="You can only view your own submissions.",
         )
 
-    return SubmissionStatusResponse(
-        submission_id=submission.id,
-        status=submission.status.value,
-        output=submission.output,
-        stdout=submission.stdout,
-        stderr=submission.stderr,
-        exit_code=submission.exit_code,
-        runtime_ms=submission.runtime_ms,
-        verdict=submission.verdict.value if submission.verdict else None,
-    )
+    return _submission_response(submission)
 
 
 @router.get(
@@ -150,18 +277,29 @@ async def list_submissions(
     submissions = result.scalars().all()
 
     return [
-        SubmissionStatusResponse(
-            submission_id=s.id,
-            status=s.status.value,
-            output=s.output,
-            stdout=s.stdout,
-            stderr=s.stderr,
-            exit_code=s.exit_code,
-            runtime_ms=s.runtime_ms,
-            verdict=s.verdict.value if s.verdict else None,
-        )
+        _submission_response(s)
         for s in submissions
     ]
+
+
+@router.get(
+    "/all-submissions",
+    response_model=list[SubmissionStatusResponse],
+    summary="List recent submissions for the current user",
+)
+async def list_all_submissions(
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+) -> list[SubmissionStatusResponse]:
+    """Return the current user's most recent code submissions."""
+    result = await db.execute(
+        select(Submission)
+        .where(Submission.user_id == current_user.id)
+        .order_by(Submission.created_at.desc())
+        .limit(limit)
+    )
+    return [_submission_response(s) for s in result.scalars().all()]
 
 
 # ------------------------------------------------------------------

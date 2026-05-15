@@ -33,10 +33,23 @@ export function Footer() {
           </div>
           <div>
             <h4 className="mb-3 text-sm font-semibold text-foreground">Get the newsletter</h4>
-            <p className="mb-3 text-sm text-muted-foreground">Tips, new courses, and learner stories — once a week.</p>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Tips, new courses, and learner stories — once a week.
+            </p>
             <form onSubmit={submit} className="flex gap-2">
-              <Input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <Button type="submit" className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90">Subscribe</Button>
+              <Input
+                type="email"
+                required
+                placeholder="you@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Button
+                type="submit"
+                className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+              >
+                Subscribe
+              </Button>
             </form>
           </div>
         </div>
@@ -46,7 +59,11 @@ export function Footer() {
               <h4 className="mb-3 text-sm font-semibold text-foreground">{c.title}</h4>
               <ul className="space-y-2">
                 {c.items.map((i) => (
-                  <li key={i}><a className="text-sm text-muted-foreground hover:text-foreground" href="#">{i}</a></li>
+                  <li key={i}>
+                    <a className="text-sm text-muted-foreground hover:text-foreground" href="#">
+                      {i}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>

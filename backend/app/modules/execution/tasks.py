@@ -8,7 +8,11 @@ from celery import Celery
 
 from app.core.config import settings
 from app.core.database import sync_session_maker
-from app.modules.execution.docker_service import run_code_in_sandbox, run_all_test_cases
+from app.modules.execution.docker_service import (
+    run_all_test_cases,
+    run_code_in_sandbox,
+    supported_languages,
+)
 from app.modules.execution.models import Submission, SubmissionStatus, SubmissionVerdict
 from app.modules.courses.models import Step
 
@@ -138,12 +142,23 @@ def execute_user_code(self, submission_id: str) -> dict:
         step = None
         try:
             step = session.get(Step, submission.step_id)
-            if step and step.section and step.section.course:
-                language = step.section.course.language.lower()
+            if step:
+                content_language = (step.content_data or {}).get("language")
+                language = str(
+                    step.runtime_language
+                    or content_language
+                    or (step.section.course.runtime_language if step.section and step.section.course else None)
+                    or (step.section.course.language if step.section and step.section.course else None)
+                    or "python"
+                ).lower()
         except Exception:
             pass
 
         try:
+            if language not in supported_languages():
+                raise RuntimeError(
+                    f"'{language}' runtime is not supported for browser execution yet."
+                )
             result = run_code_in_sandbox(submission.code, language)
 
             stdout = result["stdout"]
@@ -190,7 +205,7 @@ def execute_user_code(self, submission_id: str) -> dict:
             submission.exit_code = exit_code
             submission.runtime_ms = runtime_ms
             submission.verdict = verdict
-            submission.test_results = json.dumps(test_results) if test_results else None
+            submission.test_results = test_results if test_results else None
 
         except RuntimeError as exc:
             submission.status = SubmissionStatus.FAILED
@@ -220,7 +235,7 @@ def execute_user_code(self, submission_id: str) -> dict:
             exit_code=submission.exit_code,
             runtime_ms=submission.runtime_ms,
             verdict=submission.verdict.value if submission.verdict else None,
-            test_results=json.loads(submission.test_results) if submission.test_results else None,
+            test_results=submission.test_results if submission.test_results else None,
         )
 
         return {
@@ -232,7 +247,7 @@ def execute_user_code(self, submission_id: str) -> dict:
             "exit_code": submission.exit_code,
             "runtime_ms": submission.runtime_ms,
             "verdict": submission.verdict.value if submission.verdict else None,
-            "test_results": json.loads(submission.test_results) if submission.test_results else None,
+            "test_results": submission.test_results if submission.test_results else None,
         }
     except Exception:
         session.rollback()

@@ -18,6 +18,9 @@ class StepBase(BaseModel):
     content_data: Optional[Dict[str, Any]] = None
     order: int = 0
     xp_reward: int = 10
+    runtime_language: Optional[str] = None
+    runtime_version: Optional[str] = None
+    previewable: bool = False
 
 
 class StepResponse(StepBase):
@@ -42,6 +45,12 @@ class CourseBase(BaseModel):
     title: str = Field(..., max_length=255)
     description: Optional[str] = None
     language: str = Field(..., max_length=100)
+    level: Optional[str] = None
+    runtime_language: Optional[str] = None
+    runtime_version: Optional[str] = None
+    last_reviewed_at: Optional[datetime] = None
+    outcomes: Optional[List[str]] = None
+    prerequisites: Optional[List[str]] = None
 
 
 class CourseResponse(CourseBase):

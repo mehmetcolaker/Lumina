@@ -912,7 +912,7 @@ SQL_SECTIONS = [
                     ),
                     "starter_code": "SELECT name, email, city\nFROM users\nWHERE age > 25;",
                     "solution": "SELECT name, email, city FROM users WHERE age > 25;",
-                    "expected_output": "name | email | city\n---\nAli Yılmaz | ali@example.com | İstanbul\nAyşe Demir | ayse@example.com | Ankara\nZeynep Çelik | zeynep@example.com | İstanbul\nCan Öztürk | can@example.com | Bursa",
+                    "expected_output": "name | email | city\n-------------------\nAli Yilmaz | ali@example.com | Istanbul\nAyse Demir | ayse@example.com | Ankara\nZeynep Celik | zeynep@example.com | Istanbul\nCan Ozturk | can@example.com | Bursa",
                     "compare_mode": "contains",
                     "hints": [
                         "Kullanılabilir tablolar: users, products, orders, categories",

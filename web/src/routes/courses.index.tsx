@@ -12,8 +12,19 @@ import type { LearningPathResponse, PathLevelResponse } from "@/lib/api-types";
 import { slugify } from "@/lib/courses";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Search, BookOpen, Code2, Database, Globe, Cpu, Lock, CheckCircle2,
-  ChevronRight, ChevronDown, Zap, ArrowRight, MapIcon,
+  Search,
+  BookOpen,
+  Code2,
+  Database,
+  Globe,
+  Cpu,
+  Lock,
+  CheckCircle2,
+  ChevronRight,
+  ChevronDown,
+  Zap,
+  ArrowRight,
+  MapIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/courses/")({
@@ -27,22 +38,62 @@ export const Route = createFileRoute("/courses/")({
 });
 
 const LANG_META: Record<string, { gradient: string; textIcon: string }> = {
-  Python:     { gradient: "from-blue-500 via-indigo-500 to-purple-600", textIcon: "PY" },
+  Python: { gradient: "from-blue-500 via-indigo-500 to-purple-600", textIcon: "PY" },
   JavaScript: { gradient: "from-yellow-400 via-amber-500 to-orange-600", textIcon: "JS" },
-  SQL:        { gradient: "from-purple-500 via-pink-500 to-rose-600", textIcon: "SQL" },
-  Go:         { gradient: "from-cyan-400 via-teal-500 to-emerald-600", textIcon: "GO" },
-  Rust:       { gradient: "from-orange-600 via-red-500 to-pink-600", textIcon: "RS" },
+  SQL: { gradient: "from-purple-500 via-pink-500 to-rose-600", textIcon: "SQL" },
+  Go: { gradient: "from-cyan-400 via-teal-500 to-emerald-600", textIcon: "GO" },
+  Rust: { gradient: "from-orange-600 via-red-500 to-pink-600", textIcon: "RS" },
 };
 
 const NODE_COLORS = [
-  { bg: "from-emerald-500 to-emerald-600", border: "border-emerald-400", text: "text-emerald-100", glow: "shadow-emerald-500/30" },
-  { bg: "from-sky-500 to-blue-600", border: "border-sky-400", text: "text-sky-100", glow: "shadow-blue-500/30" },
-  { bg: "from-violet-500 to-purple-600", border: "border-violet-400", text: "text-violet-100", glow: "shadow-purple-500/30" },
-  { bg: "from-amber-500 to-orange-600", border: "border-amber-400", text: "text-amber-100", glow: "shadow-amber-500/30" },
-  { bg: "from-rose-500 to-pink-600", border: "border-rose-400", text: "text-rose-100", glow: "shadow-rose-500/30" },
-  { bg: "from-teal-500 to-cyan-600", border: "border-teal-400", text: "text-teal-100", glow: "shadow-teal-500/30" },
-  { bg: "from-indigo-500 to-violet-600", border: "border-indigo-400", text: "text-indigo-100", glow: "shadow-indigo-500/30" },
-  { bg: "from-lime-500 to-green-600", border: "border-lime-400", text: "text-lime-100", glow: "shadow-lime-500/30" },
+  {
+    bg: "from-emerald-500 to-emerald-600",
+    border: "border-emerald-400",
+    text: "text-emerald-100",
+    glow: "shadow-emerald-500/30",
+  },
+  {
+    bg: "from-sky-500 to-blue-600",
+    border: "border-sky-400",
+    text: "text-sky-100",
+    glow: "shadow-blue-500/30",
+  },
+  {
+    bg: "from-violet-500 to-purple-600",
+    border: "border-violet-400",
+    text: "text-violet-100",
+    glow: "shadow-purple-500/30",
+  },
+  {
+    bg: "from-amber-500 to-orange-600",
+    border: "border-amber-400",
+    text: "text-amber-100",
+    glow: "shadow-amber-500/30",
+  },
+  {
+    bg: "from-rose-500 to-pink-600",
+    border: "border-rose-400",
+    text: "text-rose-100",
+    glow: "shadow-rose-500/30",
+  },
+  {
+    bg: "from-teal-500 to-cyan-600",
+    border: "border-teal-400",
+    text: "text-teal-100",
+    glow: "shadow-teal-500/30",
+  },
+  {
+    bg: "from-indigo-500 to-violet-600",
+    border: "border-indigo-400",
+    text: "text-indigo-100",
+    glow: "shadow-indigo-500/30",
+  },
+  {
+    bg: "from-lime-500 to-green-600",
+    border: "border-lime-400",
+    text: "text-lime-100",
+    glow: "shadow-lime-500/30",
+  },
 ];
 
 const defaultMeta = { gradient: "from-primary to-primary/70", textIcon: "?" };
@@ -93,15 +144,21 @@ function CoursesPage() {
     <Layout>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-border bg-[image:var(--gradient-hero)]">
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl animate-blob"
-          style={{ transform: `translateY(${scrollY * 0.3}px)` }} />
-        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/30 blur-3xl animate-blob"
-          style={{ transform: `translateY(${scrollY * -0.2}px)`, animationDelay: "2s" }} />
+        <div
+          className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl animate-blob"
+          style={{ transform: `translateY(${scrollY * 0.3}px)` }}
+        />
+        <div
+          className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/30 blur-3xl animate-blob"
+          style={{ transform: `translateY(${scrollY * -0.2}px)`, animationDelay: "2s" }}
+        />
         <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
           <Reveal>
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
               Choose your{" "}
-              <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">path</span>
+              <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">
+                path
+              </span>
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
               Each language has a structured roadmap. Complete each level to unlock the next.
@@ -160,7 +217,7 @@ function CoursesPage() {
                     const globalIdx = rowIdx * 3 + (rowIdx % 2 === 1 ? 2 - colIdx : colIdx);
                     const color = NODE_COLORS[globalIdx % NODE_COLORS.length];
                     const progressData = pathWithProgress?.levels?.[globalIdx];
-                    const isUnlocked = progressData?.unlocked ?? (globalIdx === 0);
+                    const isUnlocked = progressData?.unlocked ?? globalIdx === 0;
                     const progressPct = progressData?.progress_pct ?? 0;
                     const isComplete = progressPct >= 100;
                     const meta = LANG_META[selectedLang] ?? defaultMeta;
@@ -178,7 +235,10 @@ function CoursesPage() {
                         <button
                           onClick={() => {
                             if (!isUnlocked) return;
-                            if (!user) { navigate({ to: "/login" }); return; }
+                            if (!user) {
+                              navigate({ to: "/login" });
+                              return;
+                            }
                             navigate({ to: `/courses/${slugify(level.course.title)}` });
                           }}
                           className={`w-full text-left transition-all duration-300 ${
@@ -187,24 +247,33 @@ function CoursesPage() {
                         >
                           <div
                             className={`relative rounded-2xl border-2 p-5 overflow-hidden transition-all duration-300
-                              ${isComplete
-                                ? "bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20"
-                                : isUnlocked
-                                ? `bg-gradient-to-br ${color.bg} ${color.border} shadow-lg ${color.glow} text-white`
-                                : "bg-muted/40 border-border/30 opacity-50"
+                              ${
+                                isComplete
+                                  ? "bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20"
+                                  : isUnlocked
+                                    ? `bg-gradient-to-br ${color.bg} ${color.border} shadow-lg ${color.glow} text-white`
+                                    : "bg-muted/40 border-border/30 opacity-50"
                               }`}
                           >
                             {/* Level number badge */}
                             <div className="flex items-center justify-between mb-3">
-                              <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold
-                                ${isComplete ? "bg-emerald-500/20 text-emerald-400"
-                                  : isUnlocked ? "bg-white/20 text-white"
-                                  : "bg-muted/50 text-muted-foreground"
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold
+                                ${
+                                  isComplete
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : isUnlocked
+                                      ? "bg-white/20 text-white"
+                                      : "bg-muted/50 text-muted-foreground"
                                 }`}
                               >
-                                {isComplete ? <CheckCircle2 className="h-5 w-5" />
-                                  : !isUnlocked ? <Lock className="h-4 w-4" />
-                                  : globalIdx + 1}
+                                {isComplete ? (
+                                  <CheckCircle2 className="h-5 w-5" />
+                                ) : !isUnlocked ? (
+                                  <Lock className="h-4 w-4" />
+                                ) : (
+                                  globalIdx + 1
+                                )}
                               </div>
 
                               {/* Status badge */}
@@ -221,16 +290,23 @@ function CoursesPage() {
                             </div>
 
                             {/* Level name */}
-                            <div className={`text-[11px] font-bold uppercase tracking-wider mb-1
+                            <div
+                              className={`text-[11px] font-bold uppercase tracking-wider mb-1
                               ${isComplete ? "text-emerald-400" : isUnlocked ? "text-white/80" : "text-muted-foreground"}`}
                             >
                               {level.level_name}
                             </div>
 
                             {/* Course title */}
-                            <h3 className={`text-sm font-bold leading-tight mb-2
-                              ${isComplete ? "text-emerald-700 dark:text-emerald-300"
-                                : isUnlocked ? "text-white" : "text-muted-foreground"}`}
+                            <h3
+                              className={`text-sm font-bold leading-tight mb-2
+                              ${
+                                isComplete
+                                  ? "text-emerald-700 dark:text-emerald-300"
+                                  : isUnlocked
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                              }`}
                             >
                               {level.course.title}
                             </h3>
@@ -238,11 +314,15 @@ function CoursesPage() {
                             {/* Stats */}
                             {isUnlocked && (
                               <div className="flex items-center gap-3 text-xs">
-                                <span className={`flex items-center gap-1 ${isComplete ? "text-emerald-400" : "text-white/70"}`}>
+                                <span
+                                  className={`flex items-center gap-1 ${isComplete ? "text-emerald-400" : "text-white/70"}`}
+                                >
                                   <BookOpen className="h-3 w-3" />
                                   {user ? `${progressPct}%` : "Start"}
                                 </span>
-                                <span className={`flex items-center gap-1 ${isComplete ? "text-emerald-400" : "text-white/70"}`}>
+                                <span
+                                  className={`flex items-center gap-1 ${isComplete ? "text-emerald-400" : "text-white/70"}`}
+                                >
                                   <Zap className="h-3 w-3" />
                                   {level.order + 1}/{levels.length}
                                 </span>
@@ -273,11 +353,14 @@ function CoursesPage() {
               <MapIcon className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">Track your progress</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Sign in to save your progress, earn XP, and unlock the next levels.
-                Your learning journey is saved forever.
+                Sign in to save your progress, earn XP, and unlock the next levels. Your learning
+                journey is saved forever.
               </p>
               <div className="flex gap-3 justify-center">
-                <Button asChild className="bg-[image:var(--gradient-primary)] text-primary-foreground">
+                <Button
+                  asChild
+                  className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+                >
                   <Link to="/signup">Create free account</Link>
                 </Button>
                 <Button asChild variant="outline">

@@ -1,8 +1,9 @@
 import enum
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Enum as SAEnum, JSON, Uuid
+from sqlalchemy import DateTime, Enum as SAEnum, JSON, Uuid
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -25,6 +26,12 @@ class Course(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     language: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    level: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    runtime_language: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    runtime_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    last_reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    outcomes: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    prerequisites: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
 
     sections: Mapped[List["Section"]] = relationship(
         back_populates="course", lazy="selectin", order_by="Section.order", cascade="all, delete-orphan",
@@ -61,6 +68,9 @@ class Step(Base):
     content_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     xp_reward: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
+    runtime_language: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    runtime_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    previewable: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     section: Mapped["Section"] = relationship(back_populates="steps", lazy="selectin")
 

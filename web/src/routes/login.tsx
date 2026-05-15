@@ -33,8 +33,7 @@ function LoginPage() {
       toast.success("Welcome back!");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      const msg =
-        err instanceof ApiError ? err.message : "Sign in failed. Please try again.";
+      const msg = err instanceof ApiError ? err.message : "Sign in failed. Please try again.";
       toast.error(msg);
     } finally {
       setLoading(false);

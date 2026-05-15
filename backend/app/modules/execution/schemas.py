@@ -11,6 +11,10 @@ class CodeSubmitRequest(BaseModel):
     code: str = Field(..., min_length=1, description="Source code to execute")
 
 
+class CodePreviewRequest(CodeSubmitRequest):
+    """Unauthenticated preview execution for explicitly previewable steps."""
+
+
 class CodeSubmitResponse(BaseModel):
     """Immediate response returned after a successful submission."""
 
@@ -64,3 +68,5 @@ class ExecutionResult(BaseModel):
     exit_code: int | None = 0
     runtime_ms: int
     timed_out: bool = False
+    verdict: str | None = None
+    test_results: list[TestResult] | None = None

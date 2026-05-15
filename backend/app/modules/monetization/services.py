@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session as SyncSession  # noqa: N812
 
 from app.core.config import settings
 from app.modules.monetization.models import PlanType, Subscription
+from app.modules.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,10 @@ def _handle_checkout_completed(data: dict, db: SyncSession) -> None:
         sub.plan_type = PlanType.PREMIUM
         sub.is_active = True
 
+    user = db.get(User, UUID(user_id))
+    if user is not None:
+        user.is_premium = True
+
     db.commit()
     logger.info("Subscription activated for user %s", user_id)
 
@@ -177,14 +182,22 @@ def _handle_subscription_event(data: dict, db: SyncSession) -> None:
     if status == "active":
         sub.is_active = True
         sub.plan_type = PlanType.PREMIUM
+        is_premium = True
     elif status in ("canceled", "incomplete_expired", "past_due"):
         sub.is_active = False
         sub.plan_type = PlanType.FREE
+        is_premium = False
+    else:
+        is_premium = sub.is_active
 
     if current_period_end:
         sub.current_period_end = datetime.fromtimestamp(
             current_period_end, tz=timezone.utc
         )
+
+    user = db.get(User, sub.user_id)
+    if user is not None:
+        user.is_premium = is_premium
 
     db.commit()
     logger.info(

@@ -10,7 +10,6 @@ import type { CourseResponse, StepResponse } from "./api-types";
 
 export type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
 
-
 /** Generate a URL-safe slug from a course title. */
 export function slugify(value: string): string {
   return value
@@ -20,7 +19,6 @@ export function slugify(value: string): string {
     .trim()
     .replace(/[\s_-]+/g, "-");
 }
-
 
 /**
  * Infer a difficulty label from the average XP reward of a course.
@@ -36,23 +34,18 @@ export function deriveLevel(course: { sections?: { steps: StepResponse[] }[] }):
   return "Beginner";
 }
 
-
 /** Sum of `xp_reward` across all steps of a course. */
 export function totalCourseXp(course: { sections?: { steps: StepResponse[] }[] }): number {
   return (
-    course.sections
-      ?.flatMap((s) => s.steps)
-      .reduce((sum, s) => sum + (s.xp_reward ?? 0), 0) ?? 0
+    course.sections?.flatMap((s) => s.steps).reduce((sum, s) => sum + (s.xp_reward ?? 0), 0) ?? 0
   );
 }
-
 
 /** Estimated hours = step_count × 15 min, rounded up. */
 export function estimateHours(course: { sections?: { steps: StepResponse[] }[] }): number {
   const steps = course.sections?.flatMap((s) => s.steps) ?? [];
   return Math.max(1, Math.ceil((steps.length * 15) / 60));
 }
-
 
 /** Look up a course by its slug from a list. */
 export function findCourseBySlug<T extends { title: string }>(
@@ -62,7 +55,6 @@ export function findCourseBySlug<T extends { title: string }>(
   if (!list) return undefined;
   return list.find((c) => slugify(c.title) === slug);
 }
-
 
 // Re-export the canonical CourseResponse type for convenience
 export type { CourseResponse };

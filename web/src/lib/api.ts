@@ -15,9 +15,7 @@ const TOKEN_STORAGE_KEY = "lumina_access_token";
 
 // Vite replaces import.meta.env.VITE_* at build time.
 // Fallback ensures SSR / test environments still work.
-export const API_URL: string =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
-
+export const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
 
 // -------------------------------------------------------------
 // Token storage
@@ -38,7 +36,6 @@ export const tokenStorage = {
   },
 };
 
-
 // -------------------------------------------------------------
 // Errors
 // -------------------------------------------------------------
@@ -53,7 +50,6 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
-
 
 // -------------------------------------------------------------
 // Core fetcher
@@ -110,7 +106,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   return data as T;
 }
-
 
 // -------------------------------------------------------------
 // Typed convenience methods
